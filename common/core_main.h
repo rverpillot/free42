@@ -238,7 +238,12 @@ bool core_powercycle();
  * This function will return NULL if it fails to allocate the buffer.
  * The caller should free() the buffer once it is finished using it.
  */
+#ifdef DM42
+// Use old non-dynamically allocated version
+int core_list_programs(char *buf, int bufsize);
+#else
 char *core_list_programs();
+#endif
 
 /* core_program_size()
  * This function returns the size of a program, specified by its index.

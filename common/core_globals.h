@@ -26,7 +26,12 @@
 #include "core_tables.h"
 #include "core_variables.h"
 
+#ifdef DM42
+extern int* gfile;
+#else
 extern FILE *gfile;
+#endif
+
 
 /**********/
 /* Errors */

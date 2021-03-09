@@ -437,7 +437,8 @@ int shell_decimal_point() {
 
 
 void empty_keydown() {
-  int dummy1, dummy2, keep_running;
+  bool dummy1;
+  int dummy2, keep_running;
   do {
     printf("empty keydown:" NL);
     keep_running = core_keydown(0, &dummy1, &dummy2);
@@ -445,7 +446,7 @@ void empty_keydown() {
   } while (keep_running);
 }
 
-static int enqueued;
+static bool enqueued;
 
 
 #ifdef USE_CURSES
@@ -496,7 +497,7 @@ void main_loop_curses() {
 #define LINELEN 256
 
 void main_loop() {
-  core_init(0,0);
+  core_init(0,0,NULL,0);
   for(;;) {
     char s[LINELEN];
 

@@ -63,7 +63,7 @@ OBJS = $(SRCS:.cc=.o)
 #LIBS := gcc111libbid-$(shell uname -m).a
 
 ifdef ARM_LIB
-CXXFLAGS += -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -DARM
+CXXFLAGS += -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -DARM -DDM42
 #CXXFLAGS += -mthumb -march=armv7e-m -mfloat-abi=softfp -mfpu=fpv4-sp-d16
 #CXXFLAGS += -mthumb -march=armv7e-m
 #CXXFLAGS += -DANDROID
