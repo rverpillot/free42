@@ -22,6 +22,7 @@
 
 
 #include "shell_skin.h"
+#include "core_helpers.h"
 
 
 struct SkinPixmap {
@@ -122,7 +123,7 @@ int shell_loadimage() {
      * slightly over 4:1 (wide), etc.
      */
 
-    pm->cmap = (SkinColor *) malloc(256 * sizeof(SkinColor));
+    pm->cmap = (SkinColor *) mallocU(256 * sizeof(SkinColor));
     // TODO - handle memory allocation failure
     if (has_global_cmap) {
         for (i = 0; i < ncolors; i++) {
@@ -185,7 +186,7 @@ int shell_loadimage() {
     }
 
     size = pm->bytesperline * pm->height;
-    pm->pixels = (unsigned char *) malloc(size);
+    pm->pixels = (unsigned char *) mallocU(size);
     // TODO - handle memory allocation failure
     memset(pm->pixels, pm->depth == 1 ? background * 255 : background, size);
 
@@ -251,7 +252,7 @@ int shell_loadimage() {
                 /* Using local color map */
                 lbpp = (info & 7) + 1;
                 lncolors = 1 << lbpp;
-                lcmap = (SkinColor *) malloc(256 * sizeof(SkinColor));
+                lcmap = (SkinColor *) mallocU(256 * sizeof(SkinColor));
                 // TODO - handle memory allocation failure
                 for (i = 0; i < lncolors; i++) {
                     int r, g, b;
@@ -267,7 +268,7 @@ int shell_loadimage() {
                     int newbytesperline = pm->width * 4;
                     int v, h;
                     unsigned char *newpixels = (unsigned char *)
-                                malloc(newbytesperline * pm->height);
+                                mallocU(newbytesperline * pm->height);
                     // TODO - handle memory allocation failure
                     for (v = 0; v < pm->height; v++)
                         for (h = 0; h < pm->width; h++) {

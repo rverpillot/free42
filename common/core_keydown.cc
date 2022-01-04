@@ -29,9 +29,10 @@
 #include "core_variables.h"
 #include "shell.h"
 
+int no_menu_key_this_time = 0;
 
 static int is_number_key(int shift, int key) {
-    if (get_front_menu() == MENU_BASE_A_THRU_F
+    if (get_front_menu() == MENU_BASE_A_THRU_F && !no_menu_key_this_time
             && (key == KEY_SIGMA || key == KEY_INV || key == KEY_SQRT
                 || key == KEY_LOG || key == KEY_LN || key == KEY_XEQ))
         return 1;
@@ -652,6 +653,9 @@ void keydown_number_entry(int shift, int key) {
     } else {
         string2buf(buf, 100, &bufptr, "x\200", 2);
     }
+#ifdef ARM
+    int promptlen = bufptr;
+#endif
     string2buf(buf, 100, &bufptr, cmdline, cmdline_length);
     char2buf(buf, 100, &bufptr, '_');
 
@@ -662,6 +666,9 @@ void keydown_number_entry(int shift, int key) {
         draw_char(0, cmdline_row, 26);
         draw_string(1, cmdline_row, buf + bufptr - 21, 21);
     }
+#ifdef ARM
+    thell_edit_number(buf,promptlen, cmdline, cmdline_length);
+#endif
     flush_display();
     return;
 }
@@ -2067,7 +2074,7 @@ void keydown_normal_mode(int shift, int key) {
         return;
     }
 
-    if ((mode_appmenu != MENU_NONE
+    if (!no_menu_key_this_time && (mode_appmenu != MENU_NONE
                 || mode_plainmenu != MENU_NONE
                 || mode_transientmenu != MENU_NONE)
             && mode_alphamenu == MENU_NONE
