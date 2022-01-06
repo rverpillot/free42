@@ -290,3 +290,9 @@
 /console/*.o
 /console/*.d
 /console/*.a
+
+# /DM42PGM
+/DM42PGM/build
+/DM42PGM/.*
+/DM42PGM/*.d
+/DM42PGM/lib/libfree42_bcd_rel.a

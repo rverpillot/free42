@@ -36,5 +36,5 @@ mv libfree42.a libfree42_bcd.a
 make clean
 echo "=== RELEASE=1 ARM_LIB=1 BCD_MATH=1"
 RELEASE=1 ARM_LIB=1 BCD_MATH=1 make $MAKEOPT libfree42.a
-mv libfree42.a libfree42_bcd_rel.a
+mv libfree42.a ../DM42PGM/lib/libfree42_bcd_rel.a
 
