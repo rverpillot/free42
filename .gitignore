@@ -290,6 +290,7 @@
 /console/*.o
 /console/*.d
 /console/*.a
+/console/keymap.cc
 
 # /DM42PGM
 /DM42PGM/build
