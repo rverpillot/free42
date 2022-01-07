@@ -27,6 +27,23 @@
 #include "core_variables.h"
 #include "shell.h"
 
+#ifdef ARM
+
+void* unguarded_malloc(size_t size, const char* file, int line) {
+  void * p = malloc(size);
+  if (p == NULL)
+    shell_malloc_fail(size,file,line);
+  return p;
+}
+
+void* unguarded_realloc(void *ptr, size_t size, const char* file, int line) {
+  void * p = realloc(ptr, size);
+  if (p == NULL)
+    shell_malloc_fail(size,file,line);
+  return p;
+}
+
+#endif
 
 int resolve_ind_arg(arg_struct *arg, char *buf, int *buflen) {
     vartype *v;
@@ -926,6 +943,7 @@ void print_text(const char *text, int length, bool left_justified) {
         }
     }
 
+#ifndef ARM
     /* Handle text-mode double-width printing by inserting spaces and
      * underscores; do text-mode printing */
     if (flags.f.double_wide_print) {
@@ -936,6 +954,7 @@ void print_text(const char *text, int length, bool left_justified) {
         }
         bufptr *= 2;
     }
+#endif
 
     shell_print(buf, bufptr, bitmap, 18, 0, 0, 143, 9);
 }
@@ -1486,6 +1505,15 @@ void char2buf(char *buf, int buflen, int *bufptr, char c) {
         buf[(*bufptr)++] = c;
     else
         buf[buflen - 1] = 26;
+}
+
+void cmdnam2buf(char *buf, int buflen, int *bufptr, const char *s, int slen) {
+    int i;
+    for (i = 0; i < slen; i++)
+        if (*bufptr < buflen)
+            buf[(*bufptr)++] = s[i] & 0x7f;
+        else
+            buf[buflen - 1] = 26;
 }
 
 void string2buf(char *buf, int buflen, int *bufptr, const char *s, int slen) {

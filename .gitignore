@@ -2,6 +2,7 @@
 # /
 /.DS_Store
 /packages
+/.vscode
 
 # /android/
 /android/*.iml
@@ -284,3 +285,15 @@
 /windows/shell_spool.h
 /windows/skin2cpp.conf
 /windows/skin2cpp.cpp
+
+# /console
+/console/*.o
+/console/*.d
+/console/*.a
+/console/keymap.cc
+
+# /DM42PGM
+/DM42PGM/build
+/DM42PGM/.*
+/DM42PGM/*.d
+/DM42PGM/lib/libfree42_bcd_rel.a
