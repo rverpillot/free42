@@ -45,7 +45,7 @@
 #include <string.h>
 #include <stdio.h>
 
-static const char bigchars[130][5] =
+static const unsigned char bigchars[130][5] =
     {
         { 0x08, 0x08, 0x2a, 0x08, 0x08 },
         { 0x22, 0x14, 0x08, 0x14, 0x22 },
@@ -179,7 +179,7 @@ static const char bigchars[130][5] =
         { 0x04, 0x08, 0x70, 0x08, 0x04 }
     };
 
-static const char smallchars[407] =
+static const unsigned char smallchars[407] =
     {
         0x00, 0x00, 0x00,
         0x5c,
@@ -976,7 +976,7 @@ void draw_char(int x, int y, char c) {
     mark_dirty(Y, X, Y + 8, X + 5);
 }
 
-const char *get_char(char c) {
+const unsigned char *get_char(char c) {
     unsigned char uc = (unsigned char) c;
     if (uc >= 130)
         uc -= 128;
