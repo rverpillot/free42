@@ -297,3 +297,4 @@
 /DM42PGM/.*
 /DM42PGM/*.d
 /DM42PGM/lib/libfree42_bcd_rel.a
+console/keymap2cc
