@@ -172,7 +172,7 @@ vartype *new_list(int4 size) {
         free(list);
         return NULL;
     }
-    list->array->data = (vartype **) malloc(size * sizeof(vartype *)); 
+    list->array->data = (vartype **) malloc(size * sizeof(vartype *));
     if (list->array->data == NULL && size != 0) {
         free(list->array);
         free(list);
