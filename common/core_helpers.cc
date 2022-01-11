@@ -1045,7 +1045,7 @@ void print_wide(const char *left, int leftlen, const char *right, int rightlen) 
 void print_command(int cmd, const arg_struct *arg) {
     char buf[100];
     int bufptr = 0;
-    
+
     if (cmd == CMD_NULL && !deferred_print)
         return;
 
