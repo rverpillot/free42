@@ -515,15 +515,6 @@ bool core_keyup() {
         if (pending_command == CMD_RUN || pending_command == CMD_SST
                 || pending_command == CMD_SST_UP || pending_command == CMD_SST_RT) {
             int err = generic_sto(&input_arg, 0);
-            if ((flags.f.trace_print || flags.f.normal_print)
-                    && flags.f.printer_exists) {
-                char lbuf[12], rbuf[100];
-                int llen, rlen;
-                string_copy(lbuf, &llen, input_name, input_length);
-                lbuf[llen++] = '=';
-                rlen = vartype2string(stack[sp], rbuf, 100);
-                print_wide(lbuf, llen, rbuf, rlen);
-            }
             input_length = 0;
             if (err != ERR_NONE) {
                 pending_command = CMD_NONE;
@@ -3142,6 +3133,37 @@ static int ascii2hp(char *dst, int dstlen, const char *src, int srclen /* = -1 *
                     continue;
                 }
                 break;
+            case 0x20ac:
+                // euro symbol; expect it to be followed by two hex digits,
+                // encoding a character in the HP-42S character set. These
+                // are used by the reverse translation, hp2ascii(), for HP-42S
+                // characters that only have ambiguous translations.
+                if (srclen == -1 ? src[srcpos] != 0 && src[srcpos + 1] != 0 : srcpos + 1 < srclen) {
+                    char c1 = src[srcpos];
+                    char c2 = src[srcpos + 1];
+                    if (c1 >= '0' && c1 <= '9')
+                        c1 = c1 - '0';
+                    else if (c1 >= 'a' && c1 <= 'f')
+                        c1 = c1 - 'a' + 10;
+                    else if (c1 >= 'A' && c1 <= 'F')
+                        c1 = c1 - 'A' + 10;
+                    else
+                        goto noescape;
+                    if (c2 >= '0' && c2 <= '9')
+                        c2 = c2 - '0';
+                    else if (c2 >= 'a' && c2 <= 'f')
+                        c2 = c2 - 'a' + 10;
+                    else if (c2 >= 'A' && c2 <= 'F')
+                        c2 = c2 - 'A' + 10;
+                    else
+                        goto noescape;
+                    code = (c1 << 4) + c2;
+                    srcpos += 2;
+                } else {
+                    noescape:
+                    code = 31;
+                }
+                break;
             default:
                 // Anything outside of the printable ASCII range or LF or
                 // ESC is not representable, so we replace it with bullets,
@@ -3665,10 +3687,17 @@ static void paste_programs(const char *buf) {
                 // No closing quote? Fishy, but let's just grab 15
                 // characters and hope for the best.
                 last_quote = i < 15 ? i : 15;
-            cmd = CMD_STRING;
-            arg.type = ARGTYPE_STR;
-            arg.length = last_quote;
-            memcpy(arg.val.text, hpbuf + hppos, arg.length);
+            if (last_quote == 0) {
+                cmd = CMD_NOP;
+                arg.type = ARGTYPE_NONE;
+            } else {
+                cmd = CMD_STRING;
+                arg.type = ARGTYPE_STR;
+                arg.length = last_quote;
+                memcpy(arg.val.text, hpbuf + hppos, arg.length);
+                if (arg.length > 0)
+                    arg.val.text[0] &= 127;
+            }
         } else {
             // Not a string; try to find command
             int cmd_end = hppos;
