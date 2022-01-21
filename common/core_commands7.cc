@@ -1015,6 +1015,22 @@ int docmd_mixed(arg_struct *arg) {
     return ERR_NONE;
 }
 
+int docmd_skip(arg_struct *arg) {
+    return ERR_NO;
+}
+
+int docmd_cpxmat_t(arg_struct *arg) {
+    return stack[sp]->type == TYPE_COMPLEXMATRIX ? ERR_YES : ERR_NO;
+}
+
+int docmd_type_t(arg_struct *arg) {
+    vartype *v = new_real(stack[sp]->type);
+    if (v == NULL)
+        return ERR_INSUFFICIENT_MEMORY;
+    unary_result(v);
+    return ERR_NONE;
+}
+
 /////////////////////
 ///// Big Stack /////
 /////////////////////
@@ -1284,7 +1300,7 @@ int docmd_pgmmenu(arg_struct *arg) {
     return err;
 }
 
-int docmd_prmvar(arg_struct *arg) {
+int docmd_pgmvar(arg_struct *arg) {
     if (!flags.f.printer_enable && program_running())
         return ERR_NONE;
     if (!flags.f.printer_exists)
