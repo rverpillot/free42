@@ -163,10 +163,13 @@ void core_save_state(const char *state_file_name) {
 
     gfile = my_fopen(state_file_name_crash, "wb");
     if (gfile != NULL) {
-        save_state();
+        bool success;
+        save_state(&success);
         fclose(gfile);
-        my_remove(state_file_name);
-        my_rename(state_file_name_crash, state_file_name);
+        if (success) {
+            my_remove(state_file_name);
+            my_rename(state_file_name_crash, state_file_name);
+        }
     }
 }
 
@@ -3100,6 +3103,7 @@ static int ascii2hp(char *dst, int dstlen, const char *src, int srclen /* = -1 *
             case 0x2191: code =  94; break; // upward-pointing arrow
             case 0x22a2:                    // right tack sign (i41CX)
             case 0x22a6:                    // assertion sign (Emu42)
+            case 0x2212: code =  45; break; // minus sign
             case 0x251c: code = 127; break; // append sign
             case 0x028f: code = 129; break; // small-caps y
             case 0x240a: code = 138; break; // LF symbol
