@@ -590,10 +590,10 @@ void skin_put_pixels(unsigned const char *data) {
     } else if (skin_type == IMGTYPE_TRUECOLOR) {
         int i;
         for (i = 0; i < skin_width; i++) {
-            data++;
-            *dst++ = *data++;
-            *dst++ = *data++;
-            *dst++ = *data++;
+            *dst++ = data[2];
+            *dst++ = data[1];
+            *dst++ = data[0];
+            data += 3;
         }
     } else
         memcpy(dst, data, skin_bytesperline);
@@ -708,7 +708,7 @@ void skin_repaint(HDC hdc, HDC memdc) {
     }
 }
 
-void skin_repaint_annunciator(HDC hdc, HDC memdc, int which, int state) {
+void skin_repaint_annunciator(HDC hdc, HDC memdc, int which) {
     if (!display_enabled)
         return;
     SkinAnnunciator *ann = annunciators + (which - 1);
@@ -720,16 +720,20 @@ void skin_repaint_annunciator(HDC hdc, HDC memdc, int which, int state) {
         old_bg = SetBkColor(hdc, 0x00ffffff);
         old_fg = SetTextColor(hdc, 0x00000000);
     }
-    if (state)
-        BitBlt(hdc, ann->disp_rect.x, ann->disp_rect.y, ann->disp_rect.width, ann->disp_rect.height,
-               memdc, ann->src.x, ann->src.y, SRCCOPY);
-    else
-        BitBlt(hdc, ann->disp_rect.x, ann->disp_rect.y, ann->disp_rect.width, ann->disp_rect.height,
-               memdc, ann->disp_rect.x, ann->disp_rect.y, SRCCOPY);
+    BitBlt(hdc, ann->disp_rect.x, ann->disp_rect.y, ann->disp_rect.width, ann->disp_rect.height,
+           memdc, ann->src.x, ann->src.y, SRCCOPY);
     if (skin_type == IMGTYPE_MONO) {
         SetBkColor(hdc, old_bg);
         SetTextColor(hdc, old_fg);
     }
+}
+
+void skin_update_annunciator(HWND hWnd, int which) {
+    SkinAnnunciator *ann = annunciators + (which - 1);
+    RECT r;
+    SetRect(&r, ann->disp_rect.x, ann->disp_rect.y,
+                ann->disp_rect.x + ann->disp_rect.width, ann->disp_rect.y + ann->disp_rect.height);
+    InvalidateRect(hWnd, &r, FALSE);
 }
 
 void skin_find_key(int x, int y, bool cshift, int *skey, int *ckey) {

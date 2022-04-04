@@ -608,7 +608,6 @@ void skin_put_pixels(unsigned const char *data) {
     } else { // skin_type == IMGTYPE_TRUECOLOR
         int xx = 0;
         for (int x = 0; x < width; x++) {
-            xx++;
             *p++ = data[xx++];
             *p++ = data[xx++];
             *p++ = data[xx++];
@@ -627,17 +626,14 @@ void skin_repaint(cairo_t *cr) {
     cairo_paint(cr);
 }
 
-void skin_repaint_annunciator(cairo_t *cr, int which, bool state) {
+void skin_repaint_annunciator(cairo_t *cr, int which) {
     if (!display_enabled)
         return;
     SkinAnnunciator *ann = annunciators + (which - 1);
     cairo_save(cr);
-    if (state)
-        gdk_cairo_set_source_pixbuf(cr, skin_image,
-                ann->disp_rect.x - ann->src.x - skin.x,
-                ann->disp_rect.y - ann->src.y - skin.y);
-    else
-        gdk_cairo_set_source_pixbuf(cr, skin_image, -skin.x, -skin.y);
+    gdk_cairo_set_source_pixbuf(cr, skin_image,
+            ann->disp_rect.x - ann->src.x - skin.x,
+            ann->disp_rect.y - ann->src.y - skin.y);
     cairo_rectangle(cr, ann->disp_rect.x, ann->disp_rect.y, ann->disp_rect.width, ann->disp_rect.height);
     cairo_clip(cr);
     cairo_paint(cr);
