@@ -31,7 +31,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-  The software and related material is released as “NOMAS”  (NOt MAnufacturer Supported). 
+  The software and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
 
   1. Info is released to assist customers using, exploring and extending the product
   2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
@@ -41,14 +41,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <sys/stat.h>
-#include <stdlib.h>
 #include <errno.h>
-#include <stdio.h>
 #include <signal.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/times.h>
+#include <time.h>
 
 #include <dmcp.h>
 
@@ -62,112 +62,99 @@ void Program_Entry();
 #endif
 
 prog_info_t const prog_info = {
-	PROG_INFO_MAGIC,       // uint32_t pgm_magic;
-	0,                     // uint32_t pgm_size;
-	(void*)Program_Entry,  // void * pgm_entry;
-	PLATFORM_IFC_CNR,      // uint32_t ifc_cnr;
-	PLATFORM_IFC_VER,      // uint32_t ifc_ver;
-	QSPI_DATA_SIZE,        // uint32_t qspi_size;
-	QSPI_DATA_CRC,         // uint32_t qspi_crc;
-	PROGRAM_NAME,          // char pgm_name[16];
-	PROGRAM_VERSION,       // char pgm_version[16];
-	PROGRAM_KEYMAP_ID      // uint32_t required_keymap_id;
+    PROG_INFO_MAGIC,       // uint32_t pgm_magic;
+    0,                     // uint32_t pgm_size;
+    (void *)Program_Entry, // void * pgm_entry;
+    PLATFORM_IFC_CNR,      // uint32_t ifc_cnr;
+    PLATFORM_IFC_VER,      // uint32_t ifc_ver;
+    QSPI_DATA_SIZE,        // uint32_t qspi_size;
+    QSPI_DATA_CRC,         // uint32_t qspi_crc;
+    PROGRAM_NAME,          // char pgm_name[16];
+    PROGRAM_VERSION,       // char pgm_version[16];
+    PROGRAM_KEYMAP_ID      // uint32_t required_keymap_id;
 };
 
-
-
-int _read(int file, char *ptr, int len)
-{
-	return len;
+int _read(int file, char *ptr, int len) {
+    return len;
 }
 
-
-int _write(int file, char *ptr, int len)
-{
-	// Routed to OS, where it is printed to ITM
+int _write(int file, char *ptr, int len) {
+    // Routed to OS, where it is printed to ITM
 #ifdef USER_WRITE
-	return USER_WRITE(file, ptr, len);
+    return USER_WRITE(file, ptr, len);
 #else
-	return __sysfn__write(file, ptr, len);
+    return __sysfn__write(file, ptr, len);
 #endif
 }
 
-
-int _close(int file)
-{
-	return -1;
+int _close(int file) {
+    return -1;
 }
 
-
-int _fstat(int file, struct stat *st)
-{
-	st->st_mode = S_IFCHR;
-	return 0;
+int _fstat(int file, struct stat *st) {
+    st->st_mode = S_IFCHR;
+    return 0;
 }
 
-int _isatty(int file)
-{
-	return 1;
+int _isatty(int file) {
+    return 1;
 }
 
-int _lseek(int file, int ptr, int dir)
-{
-	return 0;
+int _lseek(int file, int ptr, int dir) {
+    return 0;
 }
 
-int _kill(int pid, int sig)
-{
-	errno = EINVAL;
-	return -1;
+int _kill(int pid, int sig) {
+    errno = EINVAL;
+    return -1;
 }
 
-int _getpid(void)
-{
-	return 1;
+int _getpid(void) {
+    return 1;
 }
 
+int _link(char *old, char *new) {
+    return -1;
+}
 
+int _unlink(char *name) {
+  return -1; 
+}
 
 void free(void *ptr) {
-	__sysfn_free(ptr);
+    __sysfn_free(ptr);
 }
-
 
 void *malloc(size_t size) {
-	return __sysfn_malloc(size);
+    return __sysfn_malloc(size);
 }
 
-
 void *calloc(size_t count, size_t nbytes) {
-	return __sysfn_calloc(count, nbytes);
+    return __sysfn_calloc(count, nbytes);
 }
 
 void *realloc(void *ptr, size_t size) {
-	return __sysfn_realloc(ptr, size);
+    return __sysfn_realloc(ptr, size);
 }
 
-
-
-void * __wrap__malloc_r (struct _reent *pr, size_t size) {
-	return malloc(size);
+void *__wrap__malloc_r(struct _reent *pr, size_t size) {
+    return malloc(size);
 }
 
-void * _calloc_r (struct _reent *pr, size_t nmemb, size_t size) {
-	return calloc(nmemb, size);
+void *_calloc_r(struct _reent *pr, size_t nmemb, size_t size) {
+    return calloc(nmemb, size);
 }
 
-void * _realloc_r (struct _reent *pr, void *ptr, size_t size) {
-	return realloc(ptr, size);
+void *_realloc_r(struct _reent *pr, void *ptr, size_t size) {
+    return realloc(ptr, size);
 }
 
-void _free_r (struct _reent *pr, void *ptr) {
-	free(ptr);
+void _free_r(struct _reent *pr, void *ptr) {
+    free(ptr);
 }
-
 
 void post_main() {
-	// Just start DMCP
-	set_reset_magic(RUN_DMCP_MAGIC);
-	sys_reset();
+    // Just start DMCP
+    set_reset_magic(RUN_DMCP_MAGIC);
+    sys_reset();
 }
-
