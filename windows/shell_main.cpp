@@ -112,7 +112,7 @@ static int keymap_length = 0;
 static keymap_entry *keymap = NULL;
 
 
-#define SHELL_VERSION 11
+#define SHELL_VERSION 12
 
 state_type state;
 static int placement_saved = 0;
@@ -503,27 +503,7 @@ static void shell_keydown() {
                         running = core_keydown(0, &enqueued, &repeat);
                 }
                 skin_display_set_enabled(true);
-                HDC hdc = GetDC(hMainWnd);
-                skin_repaint_display(hdc);
-                /*
-                HDC memdc = CreateCompatibleDC(hdc);
-                if (ann_updown)
-                    skin_repaint_annunciator(hdc, memdc, 1);
-                if (ann_shift)
-                    skin_repaint_annunciator(hdc, memdc, 2);
-                if (ann_print)
-                    skin_repaint_annunciator(hdc, memdc, 3);
-                if (ann_run)
-                    skin_repaint_annunciator(hdc, memdc, 4);
-                if (ann_battery)
-                    skin_repaint_annunciator(hdc, memdc, 5);
-                if (ann_g)
-                    skin_repaint_annunciator(hdc, memdc, 6);
-                if (ann_rad)
-                    skin_repaint_annunciator(hdc, memdc, 7);
-                DeleteDC(memdc);
-                */
-                ReleaseDC(hMainWnd, hdc);
+                invalidate_display(hMainWnd);
                 repeat = 0;
             }
         }
@@ -661,24 +641,32 @@ static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             HDC memdc = CreateCompatibleDC(hdc);
-            skin_repaint(hdc, memdc);
-            skin_repaint_display(hdc);
-            if (ann_updown)
-                skin_repaint_annunciator(hdc, memdc, 1);
-            if (ann_shift)
-                skin_repaint_annunciator(hdc, memdc, 2);
-            if (ann_print)
-                skin_repaint_annunciator(hdc, memdc, 3);
-            if (ann_run)
-                skin_repaint_annunciator(hdc, memdc, 4);
-            if (ann_battery)
-                skin_repaint_annunciator(hdc, memdc, 5);
-            if (ann_g)
-                skin_repaint_annunciator(hdc, memdc, 6);
-            if (ann_rad)
-                skin_repaint_annunciator(hdc, memdc, 7);
-            if (ckey != 0)
-                skin_repaint_key(hdc, memdc, skey, 1);
+            bool only_disp = need_to_paint_only_display(&ps.rcPaint);
+            if (!only_disp)
+                skin_repaint(hdc, memdc);
+            if (ckey < -7 || ckey > -2)
+                skin_repaint_display(hdc);
+            if (!only_disp) {
+                if (ann_updown)
+                    skin_repaint_annunciator(hdc, memdc, 1);
+                if (ann_shift)
+                    skin_repaint_annunciator(hdc, memdc, 2);
+                if (ann_print)
+                    skin_repaint_annunciator(hdc, memdc, 3);
+                if (ann_run)
+                    skin_repaint_annunciator(hdc, memdc, 4);
+                if (ann_battery)
+                    skin_repaint_annunciator(hdc, memdc, 5);
+                if (ann_g)
+                    skin_repaint_annunciator(hdc, memdc, 6);
+                if (ann_rad)
+                    skin_repaint_annunciator(hdc, memdc, 7);
+                if (ckey != 0)
+                    skin_repaint_key(hdc, memdc, skey, 1);
+            } else {
+                if (ckey >= -7 && ckey <= -2)
+                    skin_repaint_key(hdc, memdc, skey, 1);
+            }
             DeleteDC(memdc);
             EndPaint(hWnd, &ps);
             break;
@@ -2124,14 +2112,7 @@ static void printout_length_changed() {
 
 void shell_blitter(const char *bits, int bytesperline, int x, int y,
                    int width, int height) {
-    HDC hdc = GetDC(hMainWnd);
-    skin_display_blitter(hdc, bits, bytesperline, x, y, width, height);
-    if (skey >= -7 && skey <= -2) {
-        HDC memdc = CreateCompatibleDC(hdc);
-        skin_repaint_key(hdc, memdc, skey, 1);
-        DeleteObject(memdc);
-    }
-    ReleaseDC(hMainWnd, hdc);
+    skin_display_blitter(hMainWnd, bits, bytesperline, x, y, width, height);
 }
 
 const char *shell_platform() {
@@ -2212,6 +2193,11 @@ void shell_annunciators(int updn, int shf, int prt, int run, int g, int rad) {
 }
 
 bool shell_wants_cpu() {
+    static DWORD lastCount = 0;
+    DWORD count = GetTickCount();
+    if (count - lastCount < 10)
+        return false;
+    lastCount = count;
     MSG msg;
     return PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0;
 }
@@ -2577,7 +2563,9 @@ static void init_shell_state(int4 version) {
             core_settings.allow_big_stack = false;
             // fall through
         case 11:
-            // current version (SHELL_VERSION = 11),
+            // fall through
+        case 12:
+            // current version (SHELL_VERSION = 12),
             // so nothing to do here since everything
             // was initialized from the state file.
             ;
