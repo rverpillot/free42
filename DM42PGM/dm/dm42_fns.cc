@@ -1709,6 +1709,11 @@ void shell_force_lcd_refresh(int what) {
   check_for_repaint(what); // Force repaint
 }
 
+const char *shell_number_format() {
+  return ". 00";
+}
+
+
 
 
 
