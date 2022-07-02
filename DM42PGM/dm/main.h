@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define PROGRAM_NAME    "DM42PGM"
 #define DM42_VERSION    "3.22rv"
-#define F42_VERSION     "3.0.10a"
+#define F42_VERSION     "3.0.13"
 #define PROGRAM_VERSION DM42_VERSION "/" F42_VERSION
 
 // Disable printf traces for release build
