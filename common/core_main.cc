@@ -429,8 +429,12 @@ void core_keytimeout1() {
         display_command(0);
         /* If the program catalog was left up by GTO or XEQ,
          * don't paint over it */
-        if (mode_transientmenu == MENU_NONE || pending_command == CMD_NULL)
+        if (mode_transientmenu == MENU_NONE || pending_command == CMD_NULL) {
+            bool saved_prgm_mode = flags.f.prgm_mode;
+            flags.f.prgm_mode = 0;
             display_x(1);
+            flags.f.prgm_mode = saved_prgm_mode;
+        }
         flush_display();
     }
 }
@@ -443,7 +447,10 @@ void core_keytimeout2() {
             && (cmd_array[pending_command].flags & FLAG_NO_SHOW) == 0) {
         clear_row(0);
         draw_string(0, 0, "NULL", 4);
+        bool saved_prgm_mode = flags.f.prgm_mode;
+        flags.f.prgm_mode = 0;
         display_x(1);
+        flags.f.prgm_mode = saved_prgm_mode;
         flush_display();
         pending_command = CMD_CANCELLED;
     }
@@ -2524,8 +2531,8 @@ void core_import_programs(int num_progs, const char *raw_file_name) {
     free(xstr_buf);
 }
 
-static int real2buf(char *buf, phloat x, const char *format = NULL) {
-    int bufptr = phloat2string(x, buf, 49, 2, 0, 3, 0, MAX_MANT_DIGITS, format);
+static int real2buf(char *buf, phloat x, const char *format = NULL, bool force_decimal = true) {
+    int bufptr = phloat2string(x, buf, 49, force_decimal ? 0 : 1, 0, 3, 0, MAX_MANT_DIGITS, format);
     /* Convert small-caps 'E' to regular 'e' */
     for (int i = 0; i < bufptr; i++)
         if (buf[i] == 24)
@@ -2544,14 +2551,14 @@ static int complex2buf(char *buf, phloat re, phloat im, bool always_rect, const 
         x = re;
         y = im;
     }
-    int bufptr = phloat2string(x, buf, 99, 2, 0, 3, 0, MAX_MANT_DIGITS, format);
+    int bufptr = phloat2string(x, buf, 99, 0, 0, 3, 0, MAX_MANT_DIGITS, format);
     if (polar) {
         string2buf(buf, 99, &bufptr, " \342\210\240 ", 5);
     } else {
         if (y >= 0 || p_isinf(y) != 0 || p_isnan(y))
             buf[bufptr++] = '+';
     }
-    bufptr += phloat2string(y, buf + bufptr, 99 - bufptr, 2, 0, 3, 0, MAX_MANT_DIGITS, format);
+    bufptr += phloat2string(y, buf + bufptr, 99 - bufptr, 0, 0, 3, 0, MAX_MANT_DIGITS, format);
     if (!polar)
         buf[bufptr++] = 'i';
     /* Convert small-caps 'E' to regular 'e' */
@@ -2733,7 +2740,7 @@ char *core_copy() {
     } else if (stack[sp]->type == TYPE_REAL) {
         const char *format = core_settings.localized_copy_paste ? number_format() : NULL;
         char *buf = (char *) malloc(50);
-        int bufptr = real2buf(buf, ((vartype_real *) stack[sp])->x, format);
+        int bufptr = real2buf(buf, ((vartype_real *) stack[sp])->x, format, false);
         buf[bufptr] = 0;
         return buf;
     } else if (stack[sp]->type == TYPE_COMPLEX) {

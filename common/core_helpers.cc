@@ -765,6 +765,8 @@ int virtual_flag_handler(int flagop, int flagnum) {
 }
 
 int get_base() {
+    if (flags.f.prgm_mode)
+        return 10;
     int base = 0;
     if (flags.f.base_bit0) base += 1;
     if (flags.f.base_bit1) base += 2;
@@ -776,7 +778,7 @@ int get_base() {
         return 10;
 }
 
-void set_base(int base) {
+void set_base(int base, bool a_thru_f) {
     int oldbase = 0;
     if (flags.f.base_bit0) oldbase += 1;
     if (flags.f.base_bit1) oldbase += 2;
@@ -791,7 +793,7 @@ void set_base(int base) {
     flags.f.base_bit1 = (base & 2) != 0;
     flags.f.base_bit2 = (base & 4) != 0;
     flags.f.base_bit3 = (base & 8) != 0;
-    if (mode_appmenu == MENU_BASE_A_THRU_F)
+    if (!a_thru_f && mode_appmenu == MENU_BASE_A_THRU_F)
         set_menu(MENULEVEL_APP, MENU_BASE);
 
     if (base != oldbase)
@@ -816,6 +818,8 @@ int base_range_check(int8 *n, bool force_wrap) {
                 *n &= (1ULL << wsize) - 1;
         }
     } else if (flags.f.base_signed) {
+        if (wsize == 64)
+            return ERR_NONE;
         int8 high = 1LL << (wsize - 1);
         int8 low = -high;
         high--;
