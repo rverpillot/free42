@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2023  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -399,7 +399,7 @@ const menu_spec menus[] = {
                         { 0x1000 + CMD_LIST,  0, "" },
                         { 0x1000 + CMD_ADV,   0, "" },
                         { 0x1000 + CMD_PRLCD, 0, "" },
-                        { 0x1000 + CMD_NULL,  0, "" },
+                        { 0x1000 + CMD_PRREG, 0, "" },
                         { 0x1000 + CMD_DELAY, 0, "" } } },
     { /* MENU_PRINT3 */ MENU_NONE, MENU_PRINT1, MENU_PRINT2,
                       { { 0x2000 + CMD_PON,    0, "" },
@@ -3528,7 +3528,7 @@ int pop_func_state(bool error) {
             memcpy(stack, st->array->data + 1, st_levels * sizeof(vartype *));
             memset(st->array->data + 1, 0, st_levels * sizeof(vartype *));
             sp = st_levels - 1;
-            for (int i = fd->size - 1; i >= 4; i++)
+            for (int i = fd->size - 1; i >= 4; i--)
                 stack[++sp] = fd_data[i];
             memset(fd->array->data + 4, 0, fd_levels * sizeof(vartype *));
         } else {
@@ -3716,6 +3716,10 @@ static void validate_matedit() {
         vartype_complexmatrix *cm = (vartype_complexmatrix *) v;
         rows = cm->rows;
         cols = cm->columns;
+    } else if (v->type == TYPE_LIST) {
+        vartype_list *list = (vartype_list *) v;
+        rows = list->size;
+        cols = 1;
     } else {
         goto fail;
     }

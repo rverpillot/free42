@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2023  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -1903,20 +1903,34 @@ int docmd_s_to_n(arg_struct *arg) {
     return ERR_NONE;
 }
 
-int docmd_n_to_s(arg_struct *arg) {
+static int number_to_string(int max_mant_digits) {
     // N->S: convert number to string, like ARCL
     vartype *v;
     if (stack[sp]->type == TYPE_STRING) {
         v = dup_vartype(stack[sp]);
     } else {
         char buf[100];
-        int bufptr = vartype2string(stack[sp], buf, 100);
+        int bufptr = vartype2string(stack[sp], buf, 100, max_mant_digits);
         v = new_string(buf, bufptr);
     }
     if (v == NULL)
         return ERR_INSUFFICIENT_MEMORY;
     unary_result(v);
     return ERR_NONE;
+}
+
+int docmd_n_to_s(arg_struct *arg) {
+    return number_to_string(12);
+}
+
+int docmd_nn_to_s(arg_struct *args) {
+    char saved_fix_or_all = flags.f.fix_or_all;
+    char saved_eng_or_all = flags.f.eng_or_all;
+    flags.f.fix_or_all = flags.f.eng_or_all = 1;
+    int err = number_to_string(MAX_MANT_DIGITS);
+    flags.f.fix_or_all = saved_fix_or_all;
+    flags.f.eng_or_all = saved_eng_or_all;
+    return err;
 }
 
 int docmd_c_to_n(arg_struct *arg) {

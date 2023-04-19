@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2023  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -505,6 +505,7 @@ const command_spec cmd_array[] =
     { /* TYPE_T */     docmd_type_t,      "TYP\305?",            0x00, 0x00, 0xa2, 0x76,  5, ARG_NONE,   1, ALLT },
     { /* A_THRU_F_2 */ docmd_a_thru_f,    "A...F",               0x00, 0x00, 0xa7, 0x1b,  5, ARG_NONE,   0, NA_T },
     { /* DROP_CANCL */ docmd_drop_cancl,  "DROP",                0x04, 0x00, 0x00, 0x00,  4, ARG_NONE,   1, ALLT },
+    { /* PRREG */      docmd_prreg,       "PRR\305G",            0x00, 0x00, 0xa7, 0x50,  5, ARG_NONE,   0, NA_T },
 
     /* String & List Functions */
     { /* XSTR */       docmd_xstr,        "XSTR",                0x20, 0x41, 0x00, 0x00,  4, ARG_XSTR,   0, NA_T },
@@ -520,6 +521,7 @@ const command_spec cmd_array[] =
     { /* POS */        docmd_pos,         "POS",                 0x00, 0x00, 0xa7, 0xee,  3, ARG_NONE,   2, FUNC },
     { /* S_TO_N */     docmd_s_to_n,      "S\017N",              0x00, 0x00, 0xa7, 0xef,  3, ARG_NONE,   1, 0x10 },
     { /* N_TO_S */     docmd_n_to_s,      "N\017S",              0x00, 0x00, 0xa7, 0xf0,  3, ARG_NONE,   1, ALLT },
+    { /* NN_TO_S */    docmd_nn_to_s,     "NN\017S",             0x00, 0x00, 0xa7, 0x1d,  4, ARG_NONE,   1, ALLT },
     { /* C_TO_N */     docmd_c_to_n,      "C\017N",              0x00, 0x00, 0xa7, 0xf1,  3, ARG_NONE,   1, 0x10 },
     { /* N_TO_C */     docmd_n_to_c,      "N\017C",              0x00, 0x00, 0xa7, 0xf2,  3, ARG_NONE,   1, 0x01 },
     { /* LIST_T */     docmd_list_t,      "LIST?",               0x00, 0x00, 0xa7, 0xf3,  5, ARG_NONE,   1, ALLT },

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Free42 -- an HP-42S calculator simulator
-// Copyright (C) 2004-2022  Thomas Okken
+// Copyright (C) 2004-2023  Thomas Okken
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2,
@@ -2441,7 +2441,7 @@ static void aboutCB() {
         GtkWidget *version = gtk_label_new("Free42 " VERSION);
         gtk_misc_set_alignment(GTK_MISC(version), 0, 0);
         gtk_box_pack_start(GTK_BOX(box2), version, FALSE, FALSE, 10);
-        GtkWidget *author = gtk_label_new("\302\251 2004-2022 Thomas Okken");
+        GtkWidget *author = gtk_label_new("\302\251 2004-2023 Thomas Okken");
         gtk_misc_set_alignment(GTK_MISC(author), 0, 0);
         gtk_box_pack_start(GTK_BOX(box2), author, FALSE, FALSE, 0);
         GtkWidget *websitelink = gtk_link_button_new("https://thomasokken.com/free42/");
@@ -3016,10 +3016,14 @@ void shell_blitter(const char *bits, int bytesperline, int x, int y,
     }
 }
 
-void shell_beeper(int frequency, int duration) {
+const int tone_freqs[] = { 165, 220, 247, 277, 294, 330, 370, 415, 440, 554, 1865 };
+
+void shell_beeper(int tone) {
 #ifdef AUDIO_ALSA
     const char *display_name = gdk_display_get_name(gdk_display_get_default());
     if (display_name == NULL || display_name[0] == ':') {
+        int frequency = tone_freqs[tone];
+        int duration = tone == 10 ? 125 : 250;
         if (!alsa_beeper(frequency, duration))
             gdk_display_beep(gdk_display_get_default());
     } else

@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2023  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -103,7 +103,7 @@ public class PreferencesDialog extends Dialog {
                 if (fromUser) {
                     if (val != prevVal) {
                         if (val > 0)
-                            Free42Activity.instance.playSound(val + 10, 0);
+                            Free42Activity.instance.playSound(val + 10);
                         prevVal = val;
                     }
                 }

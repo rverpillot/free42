@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2023  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -911,27 +911,12 @@ void fly_goose() {
 
 void squeak() {
     if (flags.f.audio_enable)
-        shell_beeper(1835, 125);
+        shell_beeper(10);
 }
 
 void tone(int n) {
-    if (flags.f.audio_enable) {
-        int frequency;
-        switch (n) {
-            case 0: frequency = 164; break;
-            case 1: frequency = 220; break;
-            case 2: frequency = 243; break;
-            case 3: frequency = 275; break;
-            case 4: frequency = 293; break;
-            case 5: frequency = 324; break;
-            case 6: frequency = 366; break;
-            case 7: frequency = 418; break;
-            case 8: frequency = 438; break;
-            case 9: frequency = 550; break;
-            default: return;
-        }
-        shell_beeper(frequency, 250);
-    }
+    if (flags.f.audio_enable)
+        shell_beeper(n);
 }
 
 
@@ -1696,10 +1681,10 @@ static int ext_prgm_cat[] = {
 };
 
 static int ext_str_cat[] = {
-    CMD_APPEND,    CMD_C_TO_N, CMD_EXTEND, CMD_HEAD,    CMD_LENGTH, CMD_TO_LIST,
-    CMD_FROM_LIST, CMD_LIST_T, CMD_LXASTO, CMD_NEWLIST, CMD_NEWSTR, CMD_N_TO_C,
-    CMD_N_TO_S,    CMD_POS,    CMD_REV,    CMD_SUBSTR,  CMD_S_TO_N, CMD_XASTO,
-    CMD_XSTR,      CMD_XVIEW,  CMD_NULL,   CMD_NULL,    CMD_NULL,   CMD_NULL
+    CMD_APPEND,    CMD_C_TO_N,  CMD_EXTEND, CMD_HEAD,    CMD_LENGTH, CMD_TO_LIST,
+    CMD_FROM_LIST, CMD_LIST_T,  CMD_LXASTO, CMD_NEWLIST, CMD_NEWSTR, CMD_N_TO_C,
+    CMD_N_TO_S,    CMD_NN_TO_S, CMD_POS,    CMD_REV,     CMD_SUBSTR, CMD_S_TO_N,
+    CMD_XASTO,     CMD_XSTR,    CMD_XVIEW,  CMD_NULL,    CMD_NULL,   CMD_NULL
 };
 
 static int ext_stk_cat[] = {
@@ -1711,30 +1696,31 @@ static int ext_stk_cat[] = {
 #if defined(ANDROID) || defined(IPHONE)
 #ifdef FREE42_FPTEST
 static int ext_misc_cat[] = {
-    CMD_A2LINE,  CMD_A2PLINE, CMD_CAPS,   CMD_FMA,   CMD_HEIGHT, CMD_MIXED,
-    CMD_PCOMPLX, CMD_RCOMPLX, CMD_STRACE, CMD_WIDTH, CMD_X2LINE, CMD_ACCEL,
-    CMD_LOCAT,   CMD_HEADING, CMD_FPTEST, CMD_NULL,  CMD_NULL,   CMD_NULL
+    CMD_A2LINE,  CMD_A2PLINE, CMD_CAPS,    CMD_FMA,    CMD_HEIGHT, CMD_MIXED,
+    CMD_PCOMPLX, CMD_PRREG,   CMD_RCOMPLX, CMD_STRACE, CMD_WIDTH,  CMD_X2LINE,
+    CMD_ACCEL,   CMD_LOCAT,   CMD_HEADING, CMD_FPTEST, CMD_NULL,   CMD_NULL
 };
 #define MISC_CAT_ROWS 3
 #else
 static int ext_misc_cat[] = {
-    CMD_A2LINE,  CMD_A2PLINE, CMD_CAPS,   CMD_FMA,   CMD_HEIGHT, CMD_MIXED,
-    CMD_PCOMPLX, CMD_RCOMPLX, CMD_STRACE, CMD_WIDTH, CMD_X2LINE, CMD_ACCEL,
-    CMD_LOCAT,   CMD_HEADING, CMD_NULL,   CMD_NULL,  CMD_NULL,   CMD_NULL
+    CMD_A2LINE,  CMD_A2PLINE, CMD_CAPS,    CMD_FMA,    CMD_HEIGHT, CMD_MIXED,
+    CMD_PCOMPLX, CMD_PRREG,   CMD_RCOMPLX, CMD_STRACE, CMD_WIDTH,  CMD_X2LINE,
+    CMD_ACCEL,   CMD_LOCAT,   CMD_HEADING, CMD_NULL,   CMD_NULL,   CMD_NULL
 };
 #define MISC_CAT_ROWS 3
 #endif
 #else
 #ifdef FREE42_FPTEST
 static int ext_misc_cat[] = {
-    CMD_A2LINE,  CMD_A2PLINE, CMD_CAPS,   CMD_FMA,   CMD_HEIGHT, CMD_MIXED,
-    CMD_PCOMPLX, CMD_RCOMPLX, CMD_STRACE, CMD_WIDTH, CMD_X2LINE, CMD_FPTEST
+    CMD_A2LINE,  CMD_A2PLINE, CMD_CAPS,    CMD_FMA,    CMD_HEIGHT, CMD_MIXED,
+    CMD_PCOMPLX, CMD_PRREG,   CMD_RCOMPLX, CMD_STRACE, CMD_WIDTH,  CMD_X2LINE,
+    CMD_FPTEST,  CMD_NULL,    CMD_NULL,    CMD_NULL,   CMD_NULL,   CMD_NULL
 };
-#define MISC_CAT_ROWS 2
+#define MISC_CAT_ROWS 3
 #else
 static int ext_misc_cat[] = {
-    CMD_A2LINE,  CMD_A2PLINE, CMD_CAPS,   CMD_FMA,   CMD_HEIGHT, CMD_MIXED,
-    CMD_PCOMPLX, CMD_RCOMPLX, CMD_STRACE, CMD_WIDTH, CMD_X2LINE, CMD_NULL
+    CMD_A2LINE,  CMD_A2PLINE, CMD_CAPS,    CMD_FMA,    CMD_HEIGHT, CMD_MIXED,
+    CMD_PCOMPLX, CMD_PRREG,   CMD_RCOMPLX, CMD_STRACE, CMD_WIDTH,  CMD_X2LINE
 };
 #define MISC_CAT_ROWS 2
 #endif
@@ -1873,6 +1859,7 @@ static void draw_catalog() {
         int vcount = 0;
         int i, j, k = -1;
         int show_real = 1;
+        int show_str = 1;
         int show_cpx = 1;
         int show_mat = 1;
         int show_list = 1;
@@ -1882,10 +1869,15 @@ static void draw_catalog() {
             case CATSECT_REAL_ONLY:
                 show_cpx = show_mat = show_list = 0; break;
             case CATSECT_CPX:
-                show_real = show_mat = show_list = 0; break;
+                show_real = show_str = show_mat = show_list = 0; break;
             case CATSECT_MAT:
             case CATSECT_MAT_ONLY:
-                show_real = show_cpx = show_list = 0; break;
+                show_real = show_str = show_cpx = show_list = 0; break;
+            case CATSECT_MAT_LIST:
+            case CATSECT_MAT_LIST_ONLY:
+                show_real = show_str = show_cpx = 0; break;
+            case CATSECT_LIST_STR_ONLY:
+                show_real = show_cpx = show_mat = 0; break;
         }
 
         for (i = 0; i < vars_count; i++) {
@@ -1894,8 +1886,10 @@ static void draw_catalog() {
                 continue;
             switch (type) {
                 case TYPE_REAL:
-                case TYPE_STRING:
                     if (show_real) vcount++;
+                    break;
+                case TYPE_STRING:
+                    if (show_str) vcount++;
                     break;
                 case TYPE_COMPLEX:
                     if (show_cpx) vcount++;
@@ -1936,8 +1930,9 @@ static void draw_catalog() {
             int type = vars[i].value->type;
             switch (type) {
                 case TYPE_REAL:
-                case TYPE_STRING:
                     if (show_real) break; else continue;
+                case TYPE_STRING:
+                    if (show_str) break; else continue;
                 case TYPE_COMPLEX:
                     if (show_cpx) break; else continue;
                 case TYPE_REALMATRIX:
@@ -2927,6 +2922,8 @@ void set_plainmenu(int menuid) {
 void set_catalog_menu(int section) {
     mode_commandmenu = MENU_CATALOG;
     move_cat_row(0);
+    if (section == CATSECT_VARS_ONLY && incomplete_command == CMD_HEAD)
+        section = CATSECT_LIST_STR_ONLY;
     set_cat_section(section);
     switch (section) {
         case CATSECT_TOP:
@@ -2957,6 +2954,15 @@ void set_catalog_menu(int section) {
         case CATSECT_MAT:
         case CATSECT_MAT_ONLY:
             if (!vars_exist(CATSECT_MAT))
+                mode_commandmenu = MENU_NONE;
+            return;
+        case CATSECT_MAT_LIST:
+        case CATSECT_MAT_LIST_ONLY:
+            if (!vars_exist(CATSECT_MAT_LIST))
+                mode_commandmenu = MENU_NONE;
+            return;
+        case CATSECT_LIST_STR_ONLY:
+            if (!vars_exist(CATSECT_LIST_STR_ONLY))
                 mode_commandmenu = MENU_NONE;
             return;
         case CATSECT_VARS_ONLY:
@@ -3084,6 +3090,10 @@ void update_catalog() {
             if (!vars_exist(CATSECT_MAT))
                 set_cat_section(CATSECT_TOP);
             break;
+        case CATSECT_MAT_LIST:
+            if (!vars_exist(CATSECT_MAT_LIST))
+                set_cat_section(CATSECT_TOP);
+            break;
         case CATSECT_REAL_ONLY:
             if (!vars_exist(CATSECT_REAL)) {
                 *the_menu = MENU_NONE;
@@ -3093,6 +3103,20 @@ void update_catalog() {
             break;
         case CATSECT_MAT_ONLY:
             if (!vars_exist(CATSECT_MAT)) {
+                *the_menu = MENU_NONE;
+                redisplay();
+                return;
+            }
+            break;
+        case CATSECT_MAT_LIST_ONLY:
+            if (!vars_exist(CATSECT_MAT_LIST)) {
+                *the_menu = MENU_NONE;
+                redisplay();
+                return;
+            }
+            break;
+        case CATSECT_LIST_STR_ONLY:
+            if (!vars_exist(CATSECT_LIST_STR_ONLY)) {
                 *the_menu = MENU_NONE;
                 redisplay();
                 return;

@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2023  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -472,45 +472,47 @@
 #define CMD_TYPE_T      419
 #define CMD_A_THRU_F_2  420
 #define CMD_DROP_CANCL  421
+#define CMD_PRREG       422
 /* String & List Functions */
-#define CMD_XSTR        422
-#define CMD_XASTO       423
-#define CMD_LXASTO      424
-#define CMD_XVIEW       425
-#define CMD_APPEND      426
-#define CMD_EXTEND      427
-#define CMD_SUBSTR      428
-#define CMD_LENGTH      429
-#define CMD_HEAD        430
-#define CMD_REV         431
-#define CMD_POS         432
-#define CMD_S_TO_N      433
-#define CMD_N_TO_S      434
-#define CMD_C_TO_N      435
-#define CMD_N_TO_C      436
-#define CMD_LIST_T      437
-#define CMD_NEWLIST     438
-#define CMD_NEWSTR      439
-#define CMD_TO_LIST     440
-#define CMD_FROM_LIST   441
+#define CMD_XSTR        423
+#define CMD_XASTO       424
+#define CMD_LXASTO      425
+#define CMD_XVIEW       426
+#define CMD_APPEND      427
+#define CMD_EXTEND      428
+#define CMD_SUBSTR      429
+#define CMD_LENGTH      430
+#define CMD_HEAD        431
+#define CMD_REV         432
+#define CMD_POS         433
+#define CMD_S_TO_N      434
+#define CMD_N_TO_S      435
+#define CMD_NN_TO_S     436
+#define CMD_C_TO_N      437
+#define CMD_N_TO_C      438
+#define CMD_LIST_T      439
+#define CMD_NEWLIST     440
+#define CMD_NEWSTR      441
+#define CMD_TO_LIST     442
+#define CMD_FROM_LIST   443
 /* Generalized Comparisons */
-#define CMD_X_EQ_NN     442
-#define CMD_X_NE_NN     443
-#define CMD_X_LT_NN     444
-#define CMD_X_GT_NN     445
-#define CMD_X_LE_NN     446
-#define CMD_X_GE_NN     447
-#define CMD_0_EQ_NN     448
-#define CMD_0_NE_NN     449
-#define CMD_0_LT_NN     450
-#define CMD_0_GT_NN     451
-#define CMD_0_LE_NN     452
-#define CMD_0_GE_NN     453
+#define CMD_X_EQ_NN     444
+#define CMD_X_NE_NN     445
+#define CMD_X_LT_NN     446
+#define CMD_X_GT_NN     447
+#define CMD_X_LE_NN     448
+#define CMD_X_GE_NN     449
+#define CMD_0_EQ_NN     450
+#define CMD_0_NE_NN     451
+#define CMD_0_LT_NN     452
+#define CMD_0_GT_NN     453
+#define CMD_0_LE_NN     454
+#define CMD_0_GE_NN     455
 /* For Plus42 compatibility */
-#define CMD_WIDTH       454
-#define CMD_HEIGHT      455
+#define CMD_WIDTH       456
+#define CMD_HEIGHT      457
 
-#define CMD_SENTINEL    456
+#define CMD_SENTINEL    458
 
 
 /* command_spec.argtype */

@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2023  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -460,6 +460,9 @@ extern int4 incomplete_saved_highlight_row;
 #define CATSECT_EXT_MISC 21
 #define CATSECT_EXT_0_CMP 22
 #define CATSECT_EXT_X_CMP 23
+#define CATSECT_LIST_STR_ONLY 24
+#define CATSECT_MAT_LIST 25
+#define CATSECT_MAT_LIST_ONLY 26
 
 /* Command line handling temporaries */
 extern char cmdline[100];

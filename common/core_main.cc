@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2023  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -2420,8 +2420,6 @@ void core_import_programs(int num_progs, const char *raw_file_name) {
                         if (byte2 == 0x0C0) {
                             /* ASSIGN */
                             str_len = byte1 - 0x0F2;
-                            if (str_len == 0)
-                                goto xrom_string;
                             assign = 1;
                             cmd = CMD_ASGN01;
                             arg.type = ARGTYPE_STR;
@@ -3622,15 +3620,18 @@ static void paste_programs(const char *buf) {
             } else {
                 // Check for 1/X, 10^X, 4STK, and generalized comparisons with 0
                 int len = hpend - prev_hppos;
-                if (len == 3 && strncmp(hpbuf + prev_hppos, "1/X", 3) == 0) {
+                if ((len == 3 || len > 3 && hpbuf[3] == ' ')
+                        && strncmp(hpbuf + prev_hppos, "1/X", 3) == 0) {
                     cmd = CMD_INV;
                     arg.type = ARGTYPE_NONE;
                     goto store;
-                } else if (len == 4 && strncmp(hpbuf + prev_hppos, "10^X", 4) == 0) {
+                } else if ((len == 4 || len > 4 && hpbuf[4] == ' ')
+                        && strncmp(hpbuf + prev_hppos, "10^X", 4) == 0) {
                     cmd = CMD_10_POW_X;
                     arg.type = ARGTYPE_NONE;
                     goto store;
-                } else if (len == 4 && strncmp(hpbuf + prev_hppos, "4STK", 4) == 0) {
+                } else if ((len == 4 || len > 4 && hpbuf[4] == ' ')
+                        && strncmp(hpbuf + prev_hppos, "4STK", 4) == 0) {
                     cmd = CMD_4STK;
                     arg.type = ARGTYPE_NONE;
                     goto store;
@@ -4937,6 +4938,7 @@ static synonym_spec hp41_synonyms[] =
     { "X>=Y?",  false, 5, CMD_X_GE_Y  },
     { "S-N",    false, 3, CMD_S_TO_N  },
     { "N-S",    false, 3, CMD_N_TO_S  },
+    { "NN-S",   false, 4, CMD_NN_TO_S },
     { "C-N",    false, 3, CMD_C_TO_N  },
     { "N-C",    false, 3, CMD_N_TO_C  },
     { "X<>?",   false, 4, CMD_X_NE_NN },
@@ -5131,8 +5133,8 @@ void start_incomplete_command(int cmd_id) {
             display_error(ERR_NO_REAL_VARIABLES, false);
         }
     } else if (argtype == ARG_MAT) {
-        if (flags.f.prgm_mode || vars_exist(CATSECT_MAT))
-            set_catalog_menu(CATSECT_MAT_ONLY);
+        if (flags.f.prgm_mode || vars_exist(CATSECT_MAT_LIST))
+            set_catalog_menu(CATSECT_MAT_LIST_ONLY);
         else if (cmd_id != CMD_DIM) {
             mode_command_entry = false;
             display_error(ERR_NO_MATRIX_VARIABLES, false);
