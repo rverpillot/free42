@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2023  Thomas Okken
+ * Copyright (C) 2004-2024  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -537,12 +537,15 @@ int docmd_xeq(arg_struct *arg) {
             int4 dummy2;
             bool dummy3;
             pop_rtn_addr(&dummy1, &dummy2, &dummy3);
-        }
+        } else
+            save_csld();
         return err;
     } else {
         int err = docmd_gto(arg);
         if (err != ERR_NONE)
             return err;
+        else
+            save_csld();
         clear_all_rtns();
         return ERR_RUN;
     }

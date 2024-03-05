@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2023  Thomas Okken
+ * Copyright (C) 2004-2024  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -119,9 +119,10 @@ keymap_entry *parse_keymap_entry(char *line, int lineno) {
         char *tok;
         bool ctrl = false;
         bool alt = false;
+        bool numpad = false;
         bool shift = false;
         bool cshift = false;
-        int keycode = 0;
+        unsigned short keychar = 0;
         int done = 0;
         unsigned char macro[KEYMAP_MAX_MACRO_LENGTH + 1];
         int macrolen = 0;
@@ -138,18 +139,19 @@ keymap_entry *parse_keymap_entry(char *line, int lineno) {
                 ctrl = true;
             else if (strcasecmp(tok, "alt") == 0)
                 alt = true;
+            else if (strcasecmp(tok, "numpad") == 0)
+                numpad = true;
             else if (strcasecmp(tok, "shift") == 0)
                 shift = true;
             else if (strcasecmp(tok, "cshift") == 0)
                 cshift = true;
             else {
-                char *endptr;
-                long k = strtol(tok, &endptr, 10);
-                if (k < 1 || *endptr != 0) {
+                if (strlen(tok) == 1)
+                    keychar = (unsigned char) *tok;
+                else if (sscanf(tok, "0x%hx", &keychar) != 1) {
                     NSLog(@"Keymap, line %d: Bad keycode.", lineno);
                     return NULL;
                 }
-                keycode = (int) k;
                 done = 1;
             }
             tok = strtok(NULL, " \t");
@@ -178,9 +180,10 @@ keymap_entry *parse_keymap_entry(char *line, int lineno) {
 
         entry.ctrl = ctrl;
         entry.alt = alt;
+        entry.numpad = numpad;
         entry.shift = shift;
         entry.cshift = cshift;
-        entry.keycode = keycode;
+        entry.keychar = keychar;
         strcpy((char *) entry.macro, (const char *) macro);
         return &entry;
     } else
@@ -226,7 +229,7 @@ static bool skin_open(const char *skinname, bool open_layout, bool force_builtin
     
     if (!force_builtin) {
         /* Look for file */
-        sprintf(buf, "skins/%s.%s", skinname, open_layout ? "layout" : "gif");
+        snprintf(buf, 1024, "skins/%s.%s", skinname, open_layout ? "layout" : "gif");
         external_file = fopen(buf, "rb");
         if (external_file != NULL)
             return true;
@@ -509,9 +512,8 @@ void skin_load(long *width, long *height) {
                     ann->src.y = act_y;
                 }
             }
-        /*
-        } else if (strchr(line, ':') != 0) {
-            keymap_entry *entry = parse_keymap_entry(line, lineno);
+        } else if (strncasecmp(line, "mackey:", 7) == 0) {
+            keymap_entry *entry = parse_keymap_entry(line + 7, lineno);
             if (entry != NULL) {
                 if (keymap_length == kmcap) {
                     kmcap += 50;
@@ -520,7 +522,6 @@ void skin_load(long *width, long *height) {
                 }
                 memcpy(keymap + (keymap_length++), entry, sizeof(keymap_entry));
             }
-        */
         }
     }
     
@@ -784,6 +785,18 @@ bool skin_in_menu_area(int x, int y) {
     return y < display_loc.y + display_scale.y * 8;
 }
 
+void skin_position_menu(UIView *view, UIAlertController *ctrl) {
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+        UIPopoverPresentationController *pctrl = [ctrl popoverPresentationController];
+        pctrl.sourceView = view;
+        int x = display_loc.x / skin_scale_h + skin_offset_h;
+        int y = display_loc.y / skin_scale_v + skin_offset_v;
+        int width = display_scale.x * 131 / skin_scale_h;
+        int height = display_scale.y * 16 / skin_scale_v;
+        pctrl.sourceRect = CGRectMake(x, y, width, height);
+    }
+}
+
 void skin_find_key(int x, int y, bool cshift, int *skey, int *ckey) {
     x = (x - skin_offset_h) * skin_scale_h;
     y = (y - skin_offset_v) * skin_scale_v;
@@ -833,28 +846,28 @@ unsigned char *skin_find_macro(int ckey, bool *is_name) {
     return NULL;
 }
 
-/*
-unsigned char *skin_keymap_lookup(int keycode, bool ctrl, bool alt, bool shift, bool cshift, bool *exact) {
+unsigned char *skin_keymap_lookup(unsigned short keychar, bool printable,
+                                  bool ctrl, bool alt, bool numpad, bool shift,
+                                  bool cshift, bool *exact) {
     int i;
     unsigned char *macro = NULL;
     for (i = 0; i < keymap_length; i++) {
         keymap_entry *entry = keymap + i;
-        if (keycode == entry->keycode
-                && ctrl == entry->ctrl
+        if (ctrl == entry->ctrl
                 && alt == entry->alt
-                && shift == entry->shift) {
-            if (cshift == entry->cshift) {
+                && (printable || shift == entry->shift)
+                && keychar == entry->keychar) {
+            if ((!numpad || shift == entry->shift) && numpad == entry->numpad && cshift == entry->cshift) {
                 *exact = true;
                 return entry->macro;
             }
-            if (cshift)
+            if ((numpad || !entry->numpad) && (cshift || !entry->cshift))
                 macro = entry->macro;
         }
     }
     *exact = false;
     return macro;
 }
- */
 
 static void invalidate_key(int key, CalcView *view) {
     if (key == -1)

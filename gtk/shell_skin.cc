@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Free42 -- an HP-42S calculator simulator
-// Copyright (C) 2004-2023  Thomas Okken
+// Copyright (C) 2004-2024  Thomas Okken
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2,
@@ -22,6 +22,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <math.h>
 
 #include <string>
 #include <vector>
@@ -101,6 +102,8 @@ static int keymap_length;
 
 static bool display_enabled = true;
 
+static int window_width, window_height;
+
 
 /**********************************************************/
 /* Linked-in skins; defined in the skins.c, which in turn */
@@ -152,15 +155,14 @@ static void addMenuItem(GtkMenu *menu, const char *name, bool enabled) {
 }
 
 static void selectSkinCB(GtkWidget *w, gpointer cd) {
-    char *name = (char *) cd;
-    if (strcmp(state.skinName, name) != 0) {
-        int w, h;
-        strcpy(state.skinName, name);
-        skin_load(&w, &h);
-        core_repaint_display();
-        gtk_widget_set_size_request(calc_widget, w, h);
-        gtk_widget_queue_draw(calc_widget);
-    }
+    int sw, sh;
+    strcpy(state.skinName, (char *) cd);
+    skin_load(&sw, &sh);
+    core_repaint_display();
+
+    skin_set_window_size(sw, sh);
+    gtk_window_resize(GTK_WINDOW(mainwindow), sw, sh + menu_bar_height);
+    gtk_widget_queue_draw(calc_widget);
 }
 
 static bool skin_open(const char *name, bool open_layout, bool force_builtin) {
@@ -622,8 +624,12 @@ void skin_finish_image() {
 }
 
 void skin_repaint(cairo_t *cr) {
+    cairo_save(cr);
     gdk_cairo_set_source_pixbuf(cr, skin_image, -skin.x, -skin.y);
+    cairo_rectangle(cr, 0, 0, skin.width, skin.height);
+    cairo_clip(cr);
     cairo_paint(cr);
+    cairo_restore(cr);
 }
 
 void skin_repaint_annunciator(cairo_t *cr, int which) {
@@ -640,6 +646,15 @@ void skin_repaint_annunciator(cairo_t *cr, int which) {
     cairo_restore(cr);
 }
 
+static void scaled_gdk_window_invalidate_rect(GdkWindow *win, const GdkRectangle *rect, gboolean invalidate_children) {
+    GdkRectangle scaled_rect;
+    scaled_rect.x = (int) (((double) rect->x) * window_width / skin.width);
+    scaled_rect.y = (int) (((double) rect->y) * window_height / skin.height);
+    scaled_rect.width = (int) ceil(((double) rect->width) * window_width / skin.width);
+    scaled_rect.height = (int) ceil(((double) rect->height) * window_height / skin.height);
+    gdk_window_invalidate_rect(win, &scaled_rect, invalidate_children);
+}
+
 void skin_invalidate_annunciator(GdkWindow *win, int which) {
     if (!display_enabled)
         return;
@@ -649,7 +664,7 @@ void skin_invalidate_annunciator(GdkWindow *win, int which) {
     clip.y = ann->disp_rect.y;
     clip.width = ann->disp_rect.width;
     clip.height = ann->disp_rect.height;
-    gdk_window_invalidate_rect(win, &clip, FALSE);
+    scaled_gdk_window_invalidate_rect(win, &clip, FALSE);
 }
 
 void skin_find_key(int x, int y, bool cshift, int *skey, int *ckey) {
@@ -710,11 +725,11 @@ unsigned char *skin_keymap_lookup(guint keyval, bool printable,
                 && alt == entry->alt
                 && (printable || shift == entry->shift)
                 && keyval == entry->keyval) {
-            if (cshift == entry->cshift) {
+            if (shift == entry->shift && cshift == entry->cshift) {
                 *exact = true;
                 return entry->macro;
             }
-            if (cshift)
+            if ((shift || !entry->shift) && (cshift || !entry->cshift) && macro == NULL)
                 macro = entry->macro;
         }
     }
@@ -733,10 +748,14 @@ void skin_repaint_key(cairo_t *cr, int key, bool state) {
             // in that state. But, just staying on the safe side.
             return;
         key = -1 - key;
-        int x = (key - 1) * 22;
-        int y = 9;
-        int width = 21;
-        int height = 7;
+        int kx = (key - 1) * 22;
+        int ky = 9;
+        int kw = 21;
+        int kh = 7;
+        int x = kx - 1;
+        int y = ky - 1;
+        int width = kw + 2;
+        int height = kh + 2;
 
         cairo_save(cr);
         cairo_translate(cr, display_loc.x, display_loc.y);
@@ -747,12 +766,25 @@ void skin_repaint_key(cairo_t *cr, int key, bool state) {
         cairo_paint(cr);
         cairo_set_source_rgb(cr, display_fg.r / 255.0, display_fg.g / 255.0, display_fg.b / 255.0);
 
-        for (int v = y; v < y + height; v++)
-            for (int h = x; h < x + width; h++)
-                if (((disp_bits[v * 17 + (h >> 3)] & (1 << (h & 7))) != 0) != state) {
+        if (x < 0)
+            x = 0;
+        if (y < 0)
+            y = 0;
+        if (x + width > 131)
+            width = 131 - x;
+        if (y + height > 16)
+            height = 16 - y;
+
+        for (int v = y; v < y + height; v++) {
+            bool in_key_v = v >= ky && v < ky + kh;
+            for (int h = x; h < x + width; h++) {
+                bool ks = !(in_key_v && h >= kx && h < kx + kw) ^ state;
+                if (((disp_bits[v * 17 + (h >> 3)] & (1 << (h & 7))) != 0) != ks) {
                     cairo_rectangle(cr, h, v, 1, 1);
                     cairo_fill(cr);
                 }
+            }
+        }
 
         cairo_restore(cr);
         return;
@@ -780,16 +812,16 @@ void skin_invalidate_key(GdkWindow *win, int key) {
     if (key >= -7 && key <= -2) {
         /* Soft key */
         key = -1 - key;
-        int x = (key - 1) * 22 * display_scale_x;
-        int y = 9 * display_scale_y;
-        int width = 21 * display_scale_x;
-        int height = 7 * display_scale_y;
+        int x = (key - 1) * 22 * display_scale_x - 1;
+        int y = 9 * display_scale_y - 1;
+        int width = 21 * display_scale_x + 2;
+        int height = 7 * display_scale_y + 2;
         GdkRectangle clip;
         clip.x = display_loc.x + x;
         clip.y = display_loc.y + y;
         clip.width = width;
         clip.height = height;
-        gdk_window_invalidate_rect(win, &clip, FALSE);
+        scaled_gdk_window_invalidate_rect(win, &clip, FALSE);
         return;
     }
     if (key < 0 || key >= nkeys)
@@ -800,7 +832,7 @@ void skin_invalidate_key(GdkWindow *win, int key) {
     clip.y = k->disp_rect.y;
     clip.width = k->disp_rect.width;
     clip.height = k->disp_rect.height;
-    gdk_window_invalidate_rect(win, &clip, FALSE);
+    scaled_gdk_window_invalidate_rect(win, &clip, FALSE);
 }
 
 void skin_display_invalidater(GdkWindow *win, const char *bits, int bytesperline,
@@ -819,7 +851,7 @@ void skin_display_invalidater(GdkWindow *win, const char *bits, int bytesperline
             clip.y = display_loc.y + y * display_scale_y;
             clip.width = width * display_scale_x;
             clip.height = height * display_scale_y;
-            gdk_window_invalidate_rect(win, &clip, FALSE);
+            scaled_gdk_window_invalidate_rect(win, &clip, FALSE);
         }
     } else {
         gtk_widget_queue_draw_area(calc_widget,
@@ -868,10 +900,25 @@ void skin_invalidate_display(GdkWindow *win) {
         clip.y = display_loc.y;
         clip.width = 131 * display_scale_x;
         clip.height = 16 * display_scale_y;
-        gdk_window_invalidate_rect(win, &clip, FALSE);
+        scaled_gdk_window_invalidate_rect(win, &clip, FALSE);
     }
 }
 
 void skin_display_set_enabled(bool enable) {
     display_enabled = enable;
+}
+
+void skin_get_size(int *width, int *height) {
+    *width = skin.width;
+    *height = skin.height;
+}
+
+void skin_set_window_size(int width, int height) {
+    window_width = width;
+    window_height = height;
+}
+
+void skin_get_window_size(int *width, int *height) {
+    *width = window_width;
+    *height = window_height;
 }

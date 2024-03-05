@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2023  Thomas Okken
+ * Copyright (C) 2004-2024  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -718,7 +718,7 @@ extern "C" {
         va_list ap;
         char text[1024];
         va_start(ap, fmt);
-        c = vsprintf(text, fmt, ap);
+        c = vsnprintf(text, 1024, fmt, ap);
         shell_log(text);
         va_end(ap);
         return c;
@@ -763,15 +763,13 @@ int docmd_lsto(arg_struct *arg) {
             && stack[sp]->type != TYPE_REALMATRIX
             && stack[sp]->type != TYPE_COMPLEXMATRIX)
         return ERR_RESTRICTED_OPERATION;
-    /* When EDITN is active, don't allow the matrix being
-     * edited to be overwritten. */
-    if (matedit_mode == 3 && string_equals(arg->val.text,
-                arg->length, matedit_name, matedit_length))
-        return ERR_RESTRICTED_OPERATION;
     vartype *newval = dup_vartype(stack[sp]);
     if (newval == NULL)
         return ERR_INSUFFICIENT_MEMORY;
-    return store_var(arg->val.text, arg->length, newval, true);
+    err = store_var(arg->val.text, arg->length, newval, true);
+    if (err != ERR_NONE)
+        free_vartype(newval);
+    return err;
 }
 
 int docmd_lasto(arg_struct *arg) {
@@ -1029,6 +1027,10 @@ int docmd_type_t(arg_struct *arg) {
         return ERR_INSUFFICIENT_MEMORY;
     unary_result(v);
     return ERR_NONE;
+}
+
+int docmd_csld_t(arg_struct *arg) {
+    return is_csld() ? ERR_YES : ERR_NO;
 }
 
 /////////////////////
@@ -1974,13 +1976,6 @@ int docmd_newlist(arg_struct *arg) {
     return recall_result(v);
 }
 
-int docmd_newstr(arg_struct *arg) {
-    vartype *v = new_string("", 0);
-    if (v == NULL)
-        return ERR_INSUFFICIENT_MEMORY;
-    return recall_result(v);
-}
-
 int docmd_to_list(arg_struct *arg) {
     phloat x = ((vartype_real *) stack[sp])->x;
     if (x < 0)
@@ -2020,6 +2015,7 @@ int docmd_to_list(arg_struct *arg) {
         }
     }
     stack[sp] = (vartype *) list;
+    print_trace();
     return ERR_NONE;
 }
 
@@ -2069,6 +2065,7 @@ int docmd_from_list(arg_struct *arg) {
     free(list->array->data);
     free(list->array);
     free(list);
+    print_trace();
     return ERR_NONE;
 }
 

@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2023  Thomas Okken
+ * Copyright (C) 2004-2024  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -467,6 +467,8 @@ bool vartype_equals(const vartype *v1, const vartype *v2) {
         case TYPE_REALMATRIX: {
             const vartype_realmatrix *x = (const vartype_realmatrix *) v1;
             const vartype_realmatrix *y = (const vartype_realmatrix *) v2;
+            if (x->array == y->array)
+                return true;
             int4 sz, i;
             if (x->rows != y->rows || x->columns != y->columns)
                 return false;
@@ -493,6 +495,8 @@ bool vartype_equals(const vartype *v1, const vartype *v2) {
         case TYPE_COMPLEXMATRIX: {
             const vartype_complexmatrix *x = (const vartype_complexmatrix *) v1;
             const vartype_complexmatrix *y = (const vartype_complexmatrix *) v2;
+            if (x->array == y->array)
+                return true;
             int4 sz, i;
             if (x->rows != y->rows || x->columns != y->columns)
                 return false;
@@ -510,6 +514,8 @@ bool vartype_equals(const vartype *v1, const vartype *v2) {
         case TYPE_LIST: {
             const vartype_list *x = (const vartype_list *) v1;
             const vartype_list *y = (const vartype_list *) v2;
+            if (x->array == y->array)
+                return true;
             if (x->size != y->size)
                 return false;
             int4 sz = x->size;
@@ -528,7 +534,10 @@ bool vartype_equals(const vartype *v1, const vartype *v2) {
 
 int anum(const char *text, int len, phloat *res) {
     char buf[50];
+    int src_pos = 0;
+    retry:
     bool have_mant = false;
+    bool have_mant_digits = false;
     bool neg_mant = false;
     bool have_radix = false;
     bool have_exp = false;
@@ -536,7 +545,7 @@ int anum(const char *text, int len, phloat *res) {
     int exp_pos = 0;
     int buf_pos = 0;
     buf[buf_pos++] = '+';
-    for (int src_pos = 0; src_pos < len; src_pos++) {
+    for (; src_pos < len; src_pos++) {
         char c = text[src_pos];
         if (!flags.f.decimal_point)
             if (c == '.')
@@ -551,6 +560,7 @@ int anum(const char *text, int len, phloat *res) {
             } else if (c >= '0' && c <= '9') {
                 buf[buf_pos++] = c;
                 have_mant = true;
+                have_mant_digits = true;
             } else if (c == '.') {
                 buf[buf_pos++] = '0';
                 buf[buf_pos++] = '.';
@@ -564,12 +574,15 @@ int anum(const char *text, int len, phloat *res) {
                 neg_mant = !neg_mant;
             } else if (c >= '0' && c <= '9') {
                 buf[buf_pos++] = c;
+                have_mant_digits = true;
             } else if (c == '.') {
                 if (!have_radix) {
                     buf[buf_pos++] = c;
                     have_radix = true;
                 }
             } else if (c == 'E' || c == 'e' || c == 24) {
+                if (!have_mant_digits)
+                    goto retry;
                 buf[buf_pos++] = 'e';
                 exp_pos = buf_pos;
                 buf[buf_pos++] = '+';
@@ -577,6 +590,8 @@ int anum(const char *text, int len, phloat *res) {
             } else if (c == '.') {
                 /* ignore */
             } else {
+                if (!have_mant_digits)
+                    goto retry;
                 break;
             }
         } else {
@@ -591,7 +606,7 @@ int anum(const char *text, int len, phloat *res) {
             }
         }
     }
-    if (!have_mant)
+    if (!have_mant_digits)
         return false;
     if (neg_mant)
         buf[0] = '-';
@@ -1275,8 +1290,10 @@ phloat cos_grad(phloat x) {
 }
 
 int dimension_array(const char *name, int namelen, int4 rows, int4 columns, bool check_matedit) {
+    int idx = lookup_var(name, namelen);
     if (check_matedit
             && (matedit_mode == 1 || matedit_mode == 3)
+            && idx != -1 && vars[idx].level == matedit_level
             && string_equals(name, namelen, matedit_name, matedit_length)) {
         if (matedit_mode == 1)
             matedit_i = matedit_j = 0;
@@ -1284,7 +1301,7 @@ int dimension_array(const char *name, int namelen, int4 rows, int4 columns, bool
             return ERR_RESTRICTED_OPERATION;
     }
 
-    vartype *matrix = recall_var(name, namelen);
+    vartype *matrix = idx == -1 ? NULL : vars[idx].value;
     /* NOTE: 'size' will only ever be 0 when we're called from
      * docmd_size(); docmd_dim() does not allow 0-size matrices.
      */
@@ -1926,4 +1943,79 @@ int ip2revstring(phloat d, char *buf, int buflen) {
     if (s == -1 && bufpos < buflen)
         buf[bufpos++] = '-';
     return bufpos;
+}
+
+int matedit_get(vartype **res) {
+    if (matedit_mode == 0)
+        return ERR_NONEXISTENT;
+
+    vartype *m = NULL;
+    if (matedit_mode == 2)
+        m = matedit_x;
+    else
+        for (int i = vars_count - 1; i >= 0; i--) {
+            var_struct *lv = vars + i;
+            if ((lv->flags & VAR_PRIVATE) != 0)
+                continue;
+            if (matedit_level != -1 && lv->level < matedit_level)
+                return ERR_NONEXISTENT;
+            if (lv->level == matedit_level && string_equals(matedit_name, matedit_length, lv->name, lv->length)) {
+                m = lv->value;
+                break;
+            }
+        }
+    int err = ERR_NONEXISTENT;
+    if (m == NULL) {
+        bad_matrix:
+        if (matedit_mode == 2 || matedit_mode == 3)
+            leave_matrix_editor();
+        return err;
+    }
+
+    for (int i = 0; i < matedit_stack_depth; i++) {
+        if (m->type != TYPE_LIST) {
+            err = i == 0 ? ERR_INVALID_TYPE : ERR_INVALID_DATA;
+            goto bad_matrix;
+        }
+        vartype_list *list = (vartype_list *) m;
+        if (matedit_stack[i] >= list->size) {
+            err = ERR_INVALID_DATA;
+            goto bad_matrix;
+        }
+        m = list->array->data[matedit_stack[i]];
+    }
+
+    if (m->type != TYPE_REALMATRIX && m->type != TYPE_COMPLEXMATRIX && m->type != TYPE_LIST) {
+        err = matedit_stack_depth == 0 ? ERR_INVALID_TYPE : ERR_INVALID_DATA;
+        goto bad_matrix;
+    }
+
+    // The following checks *should* be unnecessary, we're already preventing
+    // those scenarios. Or that's what we're trying, anyway...
+    if (m->type == TYPE_REALMATRIX) {
+        vartype_realmatrix *rm = (vartype_realmatrix *) m;
+        if (matedit_i >= rm->rows || matedit_j >= rm->columns)
+            matedit_i = matedit_j = 0;
+    } else if (m->type == TYPE_COMPLEXMATRIX) {
+        vartype_complexmatrix *cm = (vartype_complexmatrix *) m;
+        if (matedit_i >= cm->rows || matedit_j >= cm->columns)
+            matedit_i = matedit_j = 0;
+    } else { // m->type == TYPE_LIST
+        vartype_list *list = (vartype_list *) m;
+        if (matedit_i >= list->size)
+            matedit_i = 0;
+        matedit_j = 0;
+    }
+
+    *res = m;
+    return ERR_NONE;
+}
+
+void leave_matrix_editor() {
+    set_appmenu_exitcallback(0);
+    set_menu(MENULEVEL_APP, MENU_NONE);
+    matedit_mode = 0;
+    free(matedit_stack);
+    matedit_stack = NULL;
+    matedit_stack_depth = 0;
 }

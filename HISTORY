@@ -1,3 +1,124 @@
+2024-03-04: release 3.1.4g (Windows, MacOS, and Linux)
+
+* Windows, MacOS, and Linux versions: Constraining print-out window height to
+  multiples of 18 pixels, that is, to a whole number of lines.
+* Windows version: Fixed skin rendering problem in Windows Vista.
+* Linux version: Fixed a few bugs related to main window resizing.
+
+2024-03-01: release 3.1.4f (Linux only)
+
+* Resizable main window.
+* Ctrl-D shortcut for Clear Print-Out.
+
+2024-02-28: release 3.1.4e (iOS, Windows, and MacOS)
+
+* iOS version: Fixed crash when sharing on iPad.
+* Windows version: Σ+ looked like it was pressed at startup. Fixed.
+* MacOS version: Fixed crash when making the main window too small.
+
+2024-02-26: release 3.1.4d (Windows only)
+
+* Resizable main window.
+* Ctrl-D shortcut for Clear Print-Out.
+
+2024-02-21: release 3.1.4c (MacOS only)
+
+* Resizable main window.
+* Command-D shortcut for Clear Print-Out.
+
+2024-02-14: release 3.1.4b (iOS only)
+
+* iPad support.
+
+2024-02-09: release 3.1.4a (Android only)
+
+* Fixed Alt-key handling.
+
+2024-02-09: release 3.1.4
+
+* Keyboard mapping fixes.
+* Android version: Support for external keyboards.
+* Linux version: Changed ALSA device from "plughw:0,0" to "default".
+
+2024-01-24: release 3.1.3a (Android only)
+
+* Fixed crash in File Management Menu.
+* Fixed crash when importing or exporting to cloud storage.
+
+2024-01-17: release 3.1.3
+
+* Added C.LN1+X and C.E^X-1 functions. These are complex-capable versions of
+  LN1+X and E^X-1.
+* Fixed pasting of strings that start with E.
+* Binary version: When converting binary to decimal, only use 17 digits when
+  actually needed. This prevents 0.1 from turning into 1.0000000000000001e-1,
+  for example.
+* iOS version: Support for external keyboards.
+
+2023-12-18: release 3.1.2b (Android only)
+
+* Fixed file access for Android >= 11.
+
+2023-12-12: release 3.1.2a (iOS and MacOS)
+
+* Fixed crash when loading skin images with local colormaps, caused by a bug in
+  Xcode 15.
+
+2023-12-01: release 3.1.2
+
+* CSLD? did not handle intervening XEQ/RTN. Fixed.
+* FUNC did not detect previous FUNC/LNSTK/L4STK. Fixed.
+
+2023-11-29: release 3.1.1
+
+* In the matrix / list editor (EDIT and EDITN), GOTO would prompt for a column
+  even when editing a list, and any column number other than 1 would cause an
+  error. Lists are one-dimensional, so the user should only be asked for a row.
+  Fixed.
+* iOS and MacOS versions: ASSIGN "" didn't work, because the second ENTER
+  wasn't being handled correctly. This was caused by an optimizer bug in
+  Apple's latest compiler. Fixed.
+
+2023-11-15: release 3.1
+
+* EDIT, EDITN, and INDEX now support editing lists, nested lists, empty lists,
+  and matrices within lists. See the Free42 web site for details.
+* FUNC now hides the caller's RPN stack, so user-defined functions can use
+  functions like CLST and R↓ without causing side effects.
+* User-defined functions can now be made to support 'stack lift disable'
+  properly. For functions using FUNC, this happens automatically, and other
+  functions can use the new CSLD? function (Caller's Stack Lift Disabled?).
+* FNRM and UVEC, when called with very large parameters, could get incorrect
+  results due to overflows in intermediaries. Fixed.
+* Fixed parameter bounds check in PIXEL.
+* Windows, MacOS, and Linux versions: Keyboard maps now support separate
+  mappings for unshifted and shifted numeric keypad keys, and unshifted and
+  shifted Space.
+
+2023-08-11: release 3.0.21
+
+* INPUT would crash if R/S was pressed while the stack was empty, in NSTK mode.
+  Fixed.
+* ANUM would consider a decimal point or comma by itself as zero, instead of
+  ignoring it. Fixed.
+* EDIT, EDITN, and INDEX didn't clear flags 76 and 77 (matrix edge wrap and end
+  wrap), while they should. Fixed.
+* Decimal version: In HMS+ and HMS-, fixed handling of cases where either or
+  both of the arguments has a number of minutes or seconds >= 60. (The binary
+  version did not have this bug.)
+* Binary version: max digits for SHOW increased to 17. This was necessary
+  because 16 digits was actually never enough to begin with. For example, 5 1/X
+  and 5 SQRT X^2 1/X both returned a result that looked like 0.2 in SHOW, even
+  though they are different, as can be easily verified with X=Y? or by
+  subtracting them. It takes 17 decimal digits to ensure that different binary
+  numbers will always be rendered as different decimal numbers.
+
+2023-04-19: release 3.0.20
+
+* Changed Σ+/Σ- so that, in NSTK mode, they will accept a single real argument,
+  assuming Y=0 in that case.
+* Tuned TONE frequencies to A440 scale.
+
 2023-04-10: release 3.0.19a (iOS and MacOS)
 
 * Copy in PRGM mode was dropping line 01, because of an optimizer bug in the
@@ -241,7 +362,7 @@
   instructions, like the top-level menu presented by SOLVER and ∫f(x). It is
   meant to be used by programs that aim to implement a similar behavior as
   those built-in menus.
-* On cold start, now setting the date and time format accordig to the host
+* On cold start, now setting the date and time format according to the host
   operating system's locale settings.
 * The Free42 extensions to the HP-42S instruction set are now shown in separate
   sections in CATALOG, rather than at the end of the FCN catalog.

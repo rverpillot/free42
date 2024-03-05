@@ -24,6 +24,9 @@
 /android/.idea/jarRepositories.xml
 /android/.idea/deploymentTargetDropDown.xml
 
+# /android/.idea/modules/
+/android/.idea/modules/android.iml
+
 # /android/.idea/modules/app/
 /android/.idea/modules/app/android.app.androidTest.iml
 /android/.idea/modules/app/android.app.iml
@@ -164,6 +167,10 @@
 /gtk/shell_spool.h
 /gtk/skin2cc.cc
 /gtk/skin2cc.conf
+/gtk/raw2txt
+/gtk/raw2txt.cc
+/gtk/txt2raw
+/gtk/txt2raw.cc
 
 # /iphone/
 /iphone/.DS_Store
@@ -222,6 +229,7 @@
 /windows/.vs
 /windows/Debug
 /windows/Release
+/windows/32
 /windows/keymap.cpp
 /windows/skins.cpp
 /windows/Free42Binary.exe
@@ -284,6 +292,8 @@
 /windows/shell_spool.h
 /windows/skin2cpp.conf
 /windows/skin2cpp.cpp
+/windows/raw2txt.cpp
+/windows/txt2raw.cpp
 
 # /console
 /console/*.o
@@ -296,4 +306,3 @@
 /DM42PGM/.*
 /DM42PGM/*.d
 /DM42PGM/lib/libfree42_bcd_rel.a
-console/keymap2cc
