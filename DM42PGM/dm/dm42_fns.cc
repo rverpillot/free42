@@ -366,7 +366,7 @@ extern "C" {
 
 #include <dm42_menu.h>
 #include <dm42_fns.h>
-#include <dm42_macro.h>
+#include <dm42_ext.h>
 
 
 #ifndef assert_param
@@ -829,7 +829,7 @@ void repaint_annunciators() {
           496-ann_lcd_x[a], ANN_LCD_Y,
           ANN_LCD_X, ANN_LCD_DY, 8*ann_dx[a]);
   }
-
+  
   lcd_changed |= LCD_CHG_LCD;
 }
 
@@ -1086,7 +1086,7 @@ int statefile_seek(FILE *stream, long offset, int whence) {
   CHECK_SF_BUF();
   DEACTIVATE_SF_BUF();
   if (whence == SEEK_CUR) offs += f_tell(ppgm_fp);
-  if (whence == SEEK_END) f_size(ppgm_fp);
+  if (whence == SEEK_END) offs += f_size(ppgm_fp);
 
   if (offs < 0) offs = 0;
   pgm_res = f_lseek(ppgm_fp, offs);
@@ -2977,7 +2977,7 @@ void disp_reg(const char *prompt, reg_id_t reg_id, int line_reg_nr, int bottom_u
 
 
 void disp_regs(int what) {
-  static int last_pgm_top_line = 0;
+    static int last_pgm_top_line = 0;
   char bb[LCD_HP_CHARS+2];
   int len;
 
@@ -3260,14 +3260,6 @@ void disp_regs(int what) {
     }
   }
 
-  if ( userMode ) {
-    t20->newln = 0; 
-    t20->lnfill = 0;
-    lcd_setXY(t20, 350, ANN_LCD_Y);
-    lcd_puts(t20, "USER");
-    t20->newln = 1; 
-    t20->lnfill = 1;
-  }
 
   //is_edit_x = is_edit = 0;
 
@@ -3422,7 +3414,7 @@ void disp_header() {
 
   char s[MAX_LCD_LINE_LEN]; // LCD line // FIXME: the size constant?
   char t[MAX_LCD_LINE_LEN]; // state file name
-  int ix, w, maxw = is_disp(DISP_VOLTAGE) ? 312 : 364;
+  int ix, w, maxw = (is_disp(DISP_VOLTAGE) || userMode) ? 312 : 364;
   s[0] = 0; t[0] = 0;
 
   if ( is_disp(DISP_DOW) ) {
@@ -3458,7 +3450,11 @@ void disp_header() {
   if ( is_disp(DISP_VOLTAGE) ) {
     t24->x  = maxw;
     lcd_printR(t24, "%i.%02iV", vdd/1000, (vdd/10)%100);
+  } else if ( userMode ) {
+    t24->x  = maxw;
+    lcd_printR(t24, "USER");
   }
+
 
   int icon_ix = 0; // USB
 
@@ -3860,7 +3856,7 @@ void program_main() {
     if (key == KEY_F6) hwdbg_trace_init();
 #endif
 
-    if (userMode && key != KEY_SHIFT && key != KEY_F3) {
+    if (userMode && !alpha_active() && key != KEY_SHIFT && key != KEY_F3) {
       if (macro_exec(key, ANN(SHIFT))) {
         key = -1;
       }
@@ -3907,6 +3903,7 @@ void program_main() {
           } else {
             if (macro_get_keymap() != NULL)
               userMode = !userMode;
+              disp_header();
           }
           break;
 

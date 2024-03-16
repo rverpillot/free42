@@ -56,7 +56,7 @@ extern "C" {
 
 #include <dm42_menu.h>
 #include <dm42_fns.h>
-#include <dm42_macro.h>
+#include <dm42_ext.h>
 #include <strings.h>
 
 

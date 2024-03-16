@@ -29,7 +29,6 @@
 #include "shell.h"
 #include "shell_spool.h"
 
-
 /********************/
 /* HP-42S font data */
 /********************/
@@ -44,6 +43,7 @@
 
 #include <string.h>
 #include <stdio.h>
+
 
 static const unsigned char bigchars[130][5] =
     {
@@ -2626,12 +2626,16 @@ int command2buf(char *buf, int len, int cmd, const arg_struct *arg) {
     if (cmd >= CMD_ASGN01 && cmd <= CMD_ASGN18) {
         string2buf(buf, len, &bufptr, "ASSIGN ", 7);
     } else {
+#ifdef ARM
+        cmdnam2buf(buf, len, &bufptr, cmdspec->name, cmdspec->name_length);
+#else
         for (int i = 0; i < cmdspec->name_length; i++) {
             int c = (unsigned char) cmdspec->name[i];
             if (c >= 130 && c != 138)
                 c &= 127;
             char2buf(buf, len, &bufptr, c);
         }
+#endif
     }
 
     if (cmd == CMD_XROM) {
@@ -3168,3 +3172,35 @@ void do_prgm_menu_key(int keynum) {
             save_csld();
     }
 }
+
+#ifdef ARM
+void dm_draw_string(phloat dx, phloat dy, const char *text, int length) {
+    int const MAXX = gr_MAXX();
+    int const MAXY = gr_MAXY();
+
+    int x = dx < 0 ? to_int(-floor(-dx + 0.5)) : to_int(floor(dx + 0.5));
+    int y = dy < 0 ? to_int(-floor(-dy + 0.5)) : to_int(floor(dy + 0.5));
+    if (x + length < 1 || x > MAXX || y + 8 < 1 || y > MAXY)
+        return;
+
+    for (int i = 0; i < length; i++) {
+        unsigned char uc = (unsigned char)text[i];
+        if (uc >= 130)
+            uc -= 128;
+        if (uc == 10) {
+            x = dx < 0 ? to_int(-floor(-dx + 0.5)) : to_int(floor(dx + 0.5));
+            y += 10;
+            if (y > MAXY)
+                return;
+            continue;
+        }
+        for (int v = 0; v < 8; v++) {
+            for (int h = 0; h < 5; h++) {
+                if (bigchars[uc][h] & (1 << v))
+                    thell_draw_pixel(x+h, y+v);
+            }
+        }
+        x += 6;
+    }
+} 
+#endif

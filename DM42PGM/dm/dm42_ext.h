@@ -6,8 +6,9 @@
 
 // Keymaps files dir
 #define KEYMAP_DIR     "/KEYS"
-#define KEYMAP_EXT     ".kmp"
+#define KEYMAP_EXT     ".keymap"
 
+// keymap functions
 int keymaps_load_callback(const char *fpath, const char *fname, void *data);
 void macro_set_keymap(const char *keymap);
 const char *macro_get_keymap();
