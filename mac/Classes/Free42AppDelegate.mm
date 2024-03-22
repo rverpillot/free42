@@ -122,7 +122,6 @@ static bool is_file(const char *name);
 @synthesize prefsLocalizedCopyPaste;
 @synthesize prefsPrintText;
 @synthesize prefsPrintTextFile;
-@synthesize prefsPrintTextRaw;
 @synthesize prefsPrintGIF;
 @synthesize prefsPrintGIFFile;
 @synthesize prefsPrintGIFMaxHeight;
@@ -825,7 +824,8 @@ static void tbnonewliner() {
     if (!loadSkinsWindowMapped) {
         NSString *url = @"https://thomasokken.com/free42/skins/";
         [loadSkinsURL setStringValue:url];
-        [loadSkinsWebView setMainFrameURL:url];
+        NSURLRequest *req = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
+        [loadSkinsWebView loadRequest:req];
         loadSkinsWindowMapped = true;
     }
     [loadSkinsWindow makeKeyAndOrderFront:self];
@@ -834,7 +834,8 @@ static void tbnonewliner() {
 
 - (IBAction) loadSkinsGo:(id)sender {
     NSString *url = [loadSkinsURL stringValue];
-    [loadSkinsWebView setMainFrameURL:url];
+    NSURLRequest *req = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
+    [loadSkinsWebView loadRequest:req];
 }
 
 - (IBAction) loadSkinsBack:(id)sender {
@@ -845,13 +846,13 @@ static void tbnonewliner() {
     [loadSkinsWebView goForward];
 }
 
-- (void)webView:(WebView *)sender didStartProvisionalLoadForFrame:(WebFrame *)frame {
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     [loadSkinButton setEnabled:NO];
     [loadSkinButton setTitle:@"..."];
 }
 
-- (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame {
-    NSString *url = [loadSkinsWebView mainFrameURL];
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    NSString *url = [[loadSkinsWebView URL] absoluteString];
     [loadSkinsURL setStringValue:url];
     [loadSkinButton setTitle:@"Load"];
     [loadSkinButton setEnabled:[Free42AppDelegate skinUrlPair:url] != nil];
