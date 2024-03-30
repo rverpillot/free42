@@ -404,6 +404,12 @@ int p_isnan(Phloat p) {
     return r;
 }
 
+int p_isnormal(Phloat p) {
+    int r;
+    bid128_isNormal(&r, &p.val);
+    return r;
+}
+
 int to_digit(Phloat p) {
     BID_UINT128 ten, res;
     int d10 = 10;
@@ -749,6 +755,12 @@ int ilogb(Phloat x) {
 Phloat scalbn(Phloat x, int y) {
     BID_UINT128 res;
     bid128_scalbn(&res, &x.val, &y);
+    return Phloat(res);
+}
+
+Phloat copysign(Phloat x, Phloat y) {
+    BID_UINT128 res;
+    bid128_copySign(&res, &x.val, &y.val);
     return Phloat(res);
 }
 
