@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2024  Thomas Okken
+ * Copyright (C) 2004-2025  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -1815,25 +1815,13 @@ int docmd_stop(arg_struct *arg) {
 int docmd_newmat(arg_struct *arg) {
     vartype *m;
 
-    phloat x = ((vartype_real *) stack[sp])->x;
-    if (x <= -2147483648.0 || x >= 2147483648.0)
+    int4 row, col;
+    if (!dim_to_int4(stack[sp - 1], &row))
         return ERR_DIMENSION_ERROR;
-    int4 xx = to_int4(x);
-    if (xx == 0)
+    if (!dim_to_int4(stack[sp], &col))
         return ERR_DIMENSION_ERROR;
-    if (xx < 0)
-        xx = -xx;
 
-    phloat y = ((vartype_real *) stack[sp - 1])->x;
-    if (y <= -2147483648.0 || y >= 2147483648.0)
-        return ERR_DIMENSION_ERROR;
-    int4 yy = to_int4(y);
-    if (yy == 0)
-        return ERR_DIMENSION_ERROR;
-    if (yy < 0)
-        yy = -yy;
-
-    m = new_realmatrix(yy, xx);
+    m = new_realmatrix(row + 1, col + 1);
     if (m == NULL)
         return ERR_INSUFFICIENT_MEMORY;
     else

@@ -1,3 +1,53 @@
+2025-01-25: release 3.2b (Android and iOS)
+
+* More keyboard fixes.
+
+2025-01-24: release 3.2a (Android only)
+
+* Pop-up keyboard typing fixes.
+
+2025-01-23: release 3.2
+
+* Program locking, to prevent accidental editing of programs. This is done
+  using the LOCK and UNLOCK functions. See the Free42 web site for details.
+* Improved display contrast in the built-in skins.
+* Android and iOS versions: Pop-up ALPHA keyboard, for easier text entry.
+* Linux version: Dark Mode support.
+
+2025-01-01: release 3.1.12b (Android only)
+
+* Rolling back the beeper fix from the previous release. It was not performing
+  as intended. Back to the drawing board.
+
+2024-12-28: release 3.1.12a (Android only)
+
+* Made TONE and BEEP play audio asynchronously. This should fix the occasional
+  crashes caused by those functions hogging the UI too long.
+
+2024-12-22: release 3.1.12
+
+* Fixed pasting of GETMI, PUTMI, GETLI, and PUTLI.
+
+2024-12-13: release 3.1.11
+
+* Added option to show the active keyboard map superimposed on the skin. The
+  desktop versions have this in the Help menu, and the mobile versions have it
+  in the About dialog.
+* Added functions for direct access to matrix and list elements: GETMI, PUTMI,
+  GETLI, and PUTLI. See the Free42 web site for details.
+* iOS and MacOS versions: Improved Dark Mode support.
+
+2024-11-14: release 3.1.10
+
+* Now pre-populating state name for States -> More -> Rename.
+
+2024-10-27: release 3.1.9
+
+* Implemented GETKEYA. This works like GETKEY, except that it will not wait for
+  a keystroke if no keystrokes are in the keyboard queue, returning 0 instead
+  in that case.
+* Android version: Fixed crash with relative file imports.
+
 2024-05-28: release 3.1.8b (Android only)
 
 * Fixed crash for certain unrecognized key codes from Bluetooth keyboards.
@@ -613,7 +663,7 @@
   always run in Single Instance mode; what was removed was the possibility to
   turn *off* Single Instance and allow multiple instances to run concurrently.
   That never worked well, and in the Windows version, there was never any
-  reason to allow it. In the GTK version, there was a reason, which was that
+  reason to allow it. In the Linux version, there was a reason, which was that
   Single Instance was hard to implement and did not work well in all
   environments; with GTK 3, Single Instance is supported by the platform, and
   there is no longer any reason not to use it.  

@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2024  Thomas Okken
+ * Copyright (C) 2004-2025  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -406,6 +406,7 @@ const command_spec cmd_array[] =
     { /* BWRAP */       docmd_bwrap,       "BWR\301P",            0x00, 0x00, 0xa7, 0xd7,  5, ARG_NONE,   0, NA_T },
     { /* BRESET */      docmd_breset,      "BR\305S\305T",        0x00, 0x00, 0xa7, 0xd8,  6, ARG_NONE,   0, NA_T },
     { /* GETKEY1 */     docmd_getkey1,     "G\305TK\305\3311",    0x00, 0x00, 0xa7, 0xd9,  7, ARG_NONE,   0, NA_T },
+    { /* GETKEYA */     docmd_getkeya,     "G\305TK\305\331A",    0x00, 0x00, 0xa6, 0xee,  7, ARG_NONE,   0, NA_T },
     { /* LASTO */       docmd_lasto,       "LASTO",               0x00, 0xf5, 0xf2, 0xc8,  5, ARG_NAMED,  0, NA_T },
     { /* LCLV */        docmd_lclv,        "LCLV",                0x00, 0x71, 0xf2, 0x64,  4, ARG_NAMED,  0, NA_T },
 
@@ -462,6 +463,12 @@ const command_spec cmd_array[] =
     { /* CSLD_T */      docmd_csld_t,      "CSLD?",               0x00, 0x00, 0xa7, 0xdb,  5, ARG_NONE,   0, NA_T },
     { /* C_LN_1_X */    docmd_c_ln_1_x,    "C.LN1+X",             0x00, 0x00, 0xa6, 0xfe,  7, ARG_NONE,   0, 0x0f },
     { /* C_E_POW_X_1 */ docmd_c_e_pow_x_1, "C.E^X-1",             0x00, 0x00, 0xa6, 0xff,  7, ARG_NONE,   0, 0x0f },
+    { /* GETMI */       docmd_getmi,       "G\305TMI",            0x00, 0x72, 0xf2, 0x65,  5, ARG_M_STK,  2, 0x01 },
+    { /* PUTMI */       docmd_putmi,       "PUTMI",               0x00, 0x73, 0xf2, 0x66,  5, ARG_M_STK,  3, 0x13 },
+    { /* GETLI */       docmd_getli,       "GETLI",               0x00, 0x74, 0xf2, 0x67,  5, ARG_L_STK,  1, 0x01 },
+    { /* PUTLI */       docmd_putli,       "PUTLI",               0x00, 0x75, 0xf2, 0x68,  5, ARG_L_STK,  2, ALLT },
+    { /* LOCK */        docmd_lock,        "LOCK",                0x42, 0x00, 0x00, 0x00,  4, ARG_NONE,   0, NA_T },
+    { /* UNLOCK */      docmd_unlock,      "UNL\317\303K",        0x42, 0x00, 0x00, 0x00,  6, ARG_NONE,   0, NA_T },
 
     /* String & List Functions */
     { /* XSTR */        docmd_xstr,        "XSTR",                0x20, 0x41, 0x00, 0x00,  4, ARG_XSTR,   0, NA_T },
