@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __PGM_MAIN_H__
 
 #define PROGRAM_NAME    "DM42rv"
-#define PROGRAM_VERSION "3.1.8-dm1"
+#define PROGRAM_VERSION "3.2-dm1"
 
 // Disable printf traces for release build
 //#define DBG_PRINT
